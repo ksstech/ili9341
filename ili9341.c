@@ -296,7 +296,7 @@ int32_t ili9341DeInit(void) {
 	gpio_reset_pin(ili9341GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
 	ESP_ERROR_CHECK(spi_bus_free(HSPI_HOST));
-	IF_SL_DBG(debugTRACK, "DeInit ILI9341/ST7789V device");
+	IF_SL_INFO(debugTRACK, "DeInit ILI9341/ST7789V device");
 	return erSUCCESS;
 }
 
@@ -310,7 +310,7 @@ int32_t ili9341Config(int32_t DevType) {
 		lcd_init_cmds = st_init_cmds ;
 	else
 		return erFAILURE ;
-	IF_SL_DBG(debugTRACK, "Configured device type '%s'", DevType ? "ST7789V" : "ILI9341" ) ;
+	IF_SL_INFO(debugTRACK, "Configured device type '%s'", DevType ? "ST7789V" : "ILI9341" ) ;
 	int32_t cmd = 0 ;
 	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
 		ili9341SendCommand(lcd_init_cmds[cmd].cmd) ;
@@ -320,7 +320,7 @@ int32_t ili9341Config(int32_t DevType) {
 		++cmd ;
 	}
 	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
-	IF_SL_DBG(debugTRACK, "Enabling Backlight" ) ;
+	IF_SL_INFO(debugTRACK, "Enabling Backlight" ) ;
 	sILI9341.epidSPI.val = DEFN_EPID(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL) ;
 	return erSUCCESS ;
 }
@@ -372,7 +372,7 @@ void ili9341TestInit(void) {
 	for (int i = 0; i < 2; ++i) {		// Allocate memory for the pixel buffers
 		LinesBuf[i] = heap_caps_malloc(320 * ili9341LINES_PARALLEL * sizeof(uint16_t), MALLOC_CAP_DMA);
 		assert(LinesBuf[i] != NULL);
-		IF_SL_DBG(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
+		IF_SL_INFO(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
 	}
 	for (int x = 0; x < ili9341NUM_TRANS; ++x) {
 		if ((x & 1) == 0) {            					// Even transfers are commands
