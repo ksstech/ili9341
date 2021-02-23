@@ -19,7 +19,6 @@
 
 #include	"hal_spi.h"
 #include	"hal_gpio.h"
-#include	"hal_debug.h"
 
 #include	"esp_err.h"
 #include	"esp_system.h"
