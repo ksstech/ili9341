@@ -9,11 +9,12 @@
 #include	"ili9341.h"
 #include	"FreeRTOS_Support.h"
 #include	"fonts.h"
+
+#include	"endpoint_struct.h"
 #include	"endpoint_id.h"
 
 #include	"x_errors_events.h"
 #include 	"printfx.h"
-#include	"x_struct_union.h"
 #include	"syslog.h"
 #include	"systiming.h"
 
@@ -78,12 +79,12 @@ typedef struct {
 } lcd_init_cmd_t;
 
 typedef struct ili9341_s {
-	epid_t epidSPI;
-	uint16_t segment;								// pixel horizontal
-	uint16_t max_seg;
-	uint8_t page;
-	uint8_t max_page;
-	uint8_t mem_mode;
+	epid_t		epidSPI;
+	uint16_t	segment;								// pixel horizontal
+	uint16_t	max_seg;
+	uint8_t 	page;
+	uint8_t 	max_page;
+	uint8_t 	mem_mode;
 } ili9341_t;
 
 // ################################ private static variables #######################################
@@ -99,13 +100,13 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) ;
 spi_device_interface_config_t ili9341_config = {
 		.mode			= 0,
 #if		(ili9341LCD_OVERCLOCK == 1)
-		.clock_speed_hz	= 26 * 1000 * 1000,			// 26 MHz
+		.clock_speed_hz	= 26 * 1000 * 1000,				// 26 MHz
 #else
-		.clock_speed_hz	= 10*1000*1000,           	// 10 MHz
+		.clock_speed_hz	= 10*1000*1000,           		// 10 MHz
 #endif
-		.spics_io_num	= ili9341GPIO_CS,			// CS pin
-		.queue_size 	= 7,           				// queue 7 transactions at a time
-		.pre_cb			= ili9341ToggleDClineCallback, //Specify pre-transfer callback to handle D/C line
+		.spics_io_num	= ili9341GPIO_CS,				// CS pin
+		.queue_size 	= 7,           					// queue 7 transactions at a time
+		.pre_cb			= ili9341ToggleDClineCallback,	//Specify pre-transfer callback to handle D/C line
 } ;
 
 spi_device_handle_t ili9341handle = 0;
