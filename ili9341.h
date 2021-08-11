@@ -1,13 +1,8 @@
 /*
  * ili9341.h
- *
- *  Created on: 11 Apr 2020
- *      Author: ammaree
  */
 
 #pragma	once
-
-#include	<stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,13 +38,13 @@ enum {
 
 // ##################################### Functions prototypes ######################################
 
-int32_t	ili9341Init(void) ;
-int32_t	ili9341Identify(void) ;
-int32_t	ili9341Config(int32_t DevType) ;
-int32_t	ili9341DeInit(void) ;
+int	ili9341Init(void) ;
+int	ili9341Identify(void) ;
+int	ili9341Config(int DevType) ;
+int	ili9341DeInit(void) ;
 
-void	ili9341TestInit(void) ;
-void	ili9341TestUpdate(void) ;
+void ili9341TestInit(void) ;
+void ili9341TestUpdate(void) ;
 
 #ifdef __cplusplus
 }

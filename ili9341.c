@@ -5,29 +5,24 @@
  *      Author: ammaree
  */
 
-#include	"hal_config.h"
 #include	"ili9341.h"
+#include	"hal_spi.h"
+#include	"hal_gpio.h"
 #include	"FreeRTOS_Support.h"
 #include	"fonts.h"
 
-#include	"endpoint_struct.h"
-#include	"endpoint_id.h"
+#include	"endpoints.h"
 
 #include	"x_errors_events.h"
 #include 	"printfx.h"
-#include	"syslog.h"
 #include	"systiming.h"
-
-#include	"hal_spi.h"
-#include	"hal_gpio.h"
 
 #include	"esp_err.h"
 #include	"esp_system.h"
 
 #include	<string.h>
-#include	<limits.h>
 
-#define	debugFLAG					0xF000
+#define	debugFLAG					0xE000
 
 #define	debugCMDS					(debugFLAG & 0x0001)
 
@@ -36,7 +31,7 @@
 #define	debugPARAM					(debugFLAG_GLOBAL & debugFLAG & 0x4000)
 #define	debugRESULT					(debugFLAG_GLOBAL & debugFLAG & 0x8000)
 
-// ##################debugTRACK#################### BUILD : CONFIG definitions ###############################
+// ###################################### BUILD : CONFIG definitions ###############################
 
 #define	ili9341VERSION				"v0.0.0.1"
 
@@ -98,16 +93,16 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) ;
 // ###################################### Private variables ########################################
 
 spi_device_interface_config_t ili9341_config = {
-		.mode			= 0,
+	.mode			= 0,
 #if		(ili9341LCD_OVERCLOCK == 1)
-		.clock_speed_hz	= 26 * 1000 * 1000,				// 26 MHz
+	.clock_speed_hz	= 26 * 1000 * 1000,				// 26 MHz
 #else
-		.clock_speed_hz	= 10*1000*1000,           		// 10 MHz
+	.clock_speed_hz	= 10*1000*1000,           		// 10 MHz
 #endif
-		.spics_io_num	= ili9341GPIO_CS,				// CS pin
-		.queue_size 	= 7,           					// queue 7 transactions at a time
-		.pre_cb			= ili9341ToggleDClineCallback,	//Specify pre-transfer callback to handle D/C line
-} ;
+	.spics_io_num	= ili9341GPIO_CS,				// CS pin
+	.queue_size 	= 7,           					// queue 7 transactions at a time
+	.pre_cb			= ili9341ToggleDClineCallback,	//Specify pre-transfer callback to handle D/C line
+};
 
 spi_device_handle_t ili9341handle = 0;
 SemaphoreHandle_t ili9341mutex = 0;
@@ -177,7 +172,7 @@ uint16_t *LinesBuf[2], CurCol = 0;
  * just waiting for the transaction to complete. */
 void ili9341SendCommand(const uint8_t cmd) {
 	spi_transaction_t t = { 0 };					// D/C needs to be set to 0
-	t.length = CHAR_BIT;
+	t.length = BITS_IN_BYTE;
 	t.tx_buffer = &cmd;							// The data is the cmd itself
 	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;
 }
@@ -186,10 +181,10 @@ void ili9341SendCommand(const uint8_t cmd) {
  * Since data transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendData(const uint8_t *data, int len) {
+void ili9341SendData(const uint8_t * data, int len) {
 	if (len) {
 		spi_transaction_t t = { 0 };
-		t.length = len * CHAR_BIT;// Len is in bytes, transaction length is in bits.
+		t.length = len * BITS_IN_BYTE;// Len is in bytes, transaction length is in bits.
 		t.tx_buffer = data;								// Data
 		t.user = (void*) 1;							// D/C needs to be set to 1
 		ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;  //Transmit!
@@ -199,7 +194,7 @@ void ili9341SendData(const uint8_t *data, int len) {
 int32_t ili9341GetID(void) {
 	ili9341SendCommand(0x04) ;
 	spi_transaction_t t = { 0 } ;
-	t.length = CHAR_BIT * 3 ;
+	t.length = BITS_IN_BYTE * 3 ;
 	t.flags = SPI_TRANS_USE_RXDATA ;
 	t.user = (void *) 1 ;
 	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;
@@ -272,7 +267,7 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) {
 
 // ####################################### Public functions ########################################
 
-int32_t ili9341Init(void) {
+int ili9341Init(void) {
 	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
 
 	//Initialize non-SPI GPIOs
@@ -285,24 +280,24 @@ int32_t ili9341Init(void) {
 	vTaskDelay(pdMS_TO_TICKS(100)) ;
 	gpio_set_level(ili9341GPIO_RESET, 1) ;
 	vTaskDelay(pdMS_TO_TICKS(100)) ;
-	IF_SYSTIMER_INIT(debugTIMING, systimerILI9341_1, systimerCLOCKS, "ili9341B", 50, 50000);
-	IF_SYSTIMER_INIT(debugTIMING, systimerILI9341_2, systimerCLOCKS, "ili9341C", 50, 50000);
+	IF_SYSTIMER_INIT(debugTIMING, stILI9341a, stMICROS, "ili9341A", 1, 1000);
+	IF_SYSTIMER_INIT(debugTIMING, stILI9341b, stMICROS, "ili9341B", 1, 1000);
 	return erSUCCESS;
 }
 
-int32_t ili9341DeInit(void) {
+int ili9341DeInit(void) {
 	gpio_reset_pin(ili9341GPIO_LIGHT);
 	gpio_reset_pin(ili9341GPIO_RESET);
 	gpio_reset_pin(ili9341GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
 	ESP_ERROR_CHECK(spi_bus_free(HSPI_HOST));
-	IF_SL_INFO(debugTRACK, "DeInit ILI9341/ST7789V device");
+	IF_TRACK(debugTRACK, "DeInit ILI9341/ST7789V device");
 	return erSUCCESS;
 }
 
-int32_t ili9341Identify(void) { return ili9341GetID() ; }
+int ili9341Identify(void) { return ili9341GetID() ; }
 
-int32_t ili9341Config(int32_t DevType) {
+int ili9341Config(int32_t DevType) {
 	const lcd_init_cmd_t *lcd_init_cmds ;
 	if (DevType == LCD_TYPE_ILI)
 		lcd_init_cmds = ili_init_cmds ;
@@ -310,8 +305,8 @@ int32_t ili9341Config(int32_t DevType) {
 		lcd_init_cmds = st_init_cmds ;
 	else
 		return erFAILURE ;
-	IF_SL_INFO(debugTRACK, "Configured device type '%s'", DevType ? "ST7789V" : "ILI9341" ) ;
-	int32_t cmd = 0 ;
+	IF_TRACK(debugTRACK, "Configured device type '%s'", DevType ? "ST7789V" : "ILI9341" ) ;
+	int cmd = 0 ;
 	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
 		ili9341SendCommand(lcd_init_cmds[cmd].cmd) ;
 		ili9341SendData(lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes & 0x1F) ;
@@ -320,7 +315,6 @@ int32_t ili9341Config(int32_t DevType) {
 		++cmd ;
 	}
 	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
-	IF_SL_INFO(debugTRACK, "Enabling Backlight" ) ;
 	sILI9341.epidSPI.val = DEFN_EPID(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL) ;
 	return erSUCCESS ;
 }
@@ -338,12 +332,12 @@ int ili9341PutChar(int cChr) {
 	if (sILI9341.epidSPI.devclass != devILI9341 || sILI9341.epidSPI.subclass != subDSP320X240)
 		return cChr;
 
-	IF_EXEC_1(debugTIMING, xSysTimerStart, systimerILI9341_2) ;
 	const char * pFont = &font5X7[cChr * (ili9341FONT_WIDTH - 1)] ;
 	IF_PRINT(debugCMDS, "%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
+	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341a) ;
 	ili9341SendCommand(WR_MEM) ;
 	uint8_t cBuf[ili9341FONT_WIDTH] ;
-	int32_t i ;
+	int i ;
 	for (i = 0; i < (ili9341FONT_WIDTH - 1); cBuf[i++] = *pFont++) ;
 	cBuf[i] = 0x00 ;
 	ili9341SendData(cBuf, sizeof(cBuf)) ;
@@ -356,15 +350,13 @@ int ili9341PutChar(int cChr) {
 //		ili9341SetPageAddr(sILI9341.page) ;
 //		ili9341SetSegmentAddr(0) ;
 	}
-	IF_EXEC_1(debugTIMING, xSysTimerStop, systimerILI9341_2) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341a) ;
 	return cChr ;
 }
 
 void ili9341PutString(const char *pString) { while (*pString) ili9341PutChar(*pString++) ; }
 
-void ili9341_set_brightness(uint8_t level) {
-
-}
+void ili9341_set_brightness(uint8_t level) { }
 
 // ################################## Diagnostic support functions #################################
 
@@ -372,13 +364,13 @@ void ili9341TestInit(void) {
 	for (int i = 0; i < 2; ++i) {		// Allocate memory for the pixel buffers
 		LinesBuf[i] = heap_caps_malloc(320 * ili9341LINES_PARALLEL * sizeof(uint16_t), MALLOC_CAP_DMA);
 		assert(LinesBuf[i] != NULL);
-		IF_SL_INFO(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
+		IF_PRINT(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
 	}
 	for (int x = 0; x < ili9341NUM_TRANS; ++x) {
 		if ((x & 1) == 0) {            					// Even transfers are commands
-			trans[x].length = CHAR_BIT ;
+			trans[x].length = BITS_IN_BYTE ;
 		} else {		            					// Odd transfers are data
-			trans[x].length = CHAR_BIT * 4 ;
+			trans[x].length = BITS_IN_BYTE * 4 ;
 			trans[x].user = (void *) 1 ;
 		}
 		trans[x].flags = SPI_TRANS_USE_TXDATA;
@@ -392,7 +384,7 @@ void ili9341TestInit(void) {
 
 	trans[2].tx_data[0] = SET_PAG_AD;    				// Page address set
 	trans[4].tx_data[0] = WR_MEM;       				// memory write
-	trans[5].length		= 320 * 2 * CHAR_BIT * ili9341LINES_PARALLEL; // Data length, in bits
+	trans[5].length		= 320 * 2 * BITS_IN_BYTE * ili9341LINES_PARALLEL; // Data length, in bits
 	trans[5].flags 		= 0;							// undo SPI_TRANS_USE_TXDATA flag
 	// ensure ili9341TestUpdate() start correctly
 	SentBuf = -1 ;
@@ -408,11 +400,10 @@ void ili9341TestUpdate(void) {
 	CurCol += 0x0821 ;
 	for (int y = 0; y < 240; y += ili9341LINES_PARALLEL) {
 		ili9341TestFillBuffer(LinesBuf[CalcBuf], y) ;
-		if (SentBuf != -1)								// Finish sending previous lines
-			ili9341CheckMultiLinesSend() ;
-		IF_EXEC_1(debugTIMING, xSysTimerStart, systimerILI9341_1) ;
+		if (SentBuf != -1) ili9341CheckMultiLinesSend();// Finish sending previous lines
+		IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341a) ;
 		ili9341SendMultiLines(y, LinesBuf[CalcBuf]) ;	// Send the line buffer we just calculated.
-		IF_EXEC_1(debugTIMING, xSysTimerStop, systimerILI9341_1) ;
+		IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341b) ;
 
 		SentBuf = CalcBuf ;								// save buffer just calc(+sent) as sent
 		CalcBuf = CalcBuf ? 0 : 1 ;						// toggle index to select next buffer to calc
@@ -420,5 +411,3 @@ void ili9341TestUpdate(void) {
 	IF_PRINT(debugTRACK, "Frame=%d\r", CurFrame) ;
 	++CurFrame;
 }
-
-//#endif
