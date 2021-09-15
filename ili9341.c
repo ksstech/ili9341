@@ -22,7 +22,7 @@
 
 #include	<string.h>
 
-#define	debugFLAG					0xE000
+#define	debugFLAG					0xF000
 
 #define	debugCMDS					(debugFLAG & 0x0001)
 
@@ -334,7 +334,7 @@ int ili9341PutChar(int cChr) {
 
 	const char * pFont = &font5X7[cChr * (ili9341FONT_WIDTH - 1)] ;
 	IF_PRINT(debugCMDS, "%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
-	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341a) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341b) ;
 	ili9341SendCommand(WR_MEM) ;
 	uint8_t cBuf[ili9341FONT_WIDTH] ;
 	int i ;
@@ -350,7 +350,7 @@ int ili9341PutChar(int cChr) {
 //		ili9341SetPageAddr(sILI9341.page) ;
 //		ili9341SetSegmentAddr(0) ;
 	}
-	IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341a) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341b) ;
 	return cChr ;
 }
 
@@ -403,7 +403,7 @@ void ili9341TestUpdate(void) {
 		if (SentBuf != -1) ili9341CheckMultiLinesSend();// Finish sending previous lines
 		IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341a) ;
 		ili9341SendMultiLines(y, LinesBuf[CalcBuf]) ;	// Send the line buffer we just calculated.
-		IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341b) ;
+		IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341a) ;
 
 		SentBuf = CalcBuf ;								// save buffer just calc(+sent) as sent
 		CalcBuf = CalcBuf ? 0 : 1 ;						// toggle index to select next buffer to calc
