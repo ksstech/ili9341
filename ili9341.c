@@ -305,7 +305,7 @@ int ili9341Config(int32_t DevType) {
 		lcd_init_cmds = st_init_cmds ;
 	else
 		return erFAILURE ;
-	IF_TRACK(debugTRACK, "Configured device type '%s'", DevType ? "ST7789V" : "ILI9341" ) ;
+	IF_PRINT(debugTRACK, "Configured device type '%s'\n", DevType ? "ST7789V" : "ILI9341" ) ;
 	int cmd = 0 ;
 	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
 		ili9341SendCommand(lcd_init_cmds[cmd].cmd) ;
@@ -316,6 +316,13 @@ int ili9341Config(int32_t DevType) {
 	}
 	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
 	sILI9341.epidSPI.val = DEFN_EPID(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL) ;
+
+	ili9341TestInit();
+	for (int i = 0; i < 50; ++i) {
+		ili9341TestUpdate();
+		vTaskDelay(500);
+	}
+
 	return erSUCCESS ;
 }
 

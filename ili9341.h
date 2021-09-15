@@ -20,7 +20,7 @@ extern "C" {
 
 #define	ili9341LCD_OVERCLOCK		1
 
-#define ili9341DMA_CHAN    			2					// required from SPI HAL
+#define ili9341DMA_CHAN    			SPI_DMA_CH2
 #define ili9341LINES_PARALLEL 		16
 
 #define	ili9341WR_DSP_BRIGHTNESS	0x51
