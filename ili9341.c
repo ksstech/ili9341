@@ -291,7 +291,7 @@ int ili9341DeInit(void) {
 	gpio_reset_pin(ili9341GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
 	ESP_ERROR_CHECK(spi_bus_free(HSPI_HOST));
-	IF_TRACK(debugTRACK, "DeInit ILI9341/ST7789V device");
+	IF_TL(debugTRACK, "DeInit ILI9341/ST7789V device");
 	return erSUCCESS;
 }
 
