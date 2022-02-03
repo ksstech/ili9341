@@ -4,6 +4,8 @@
 
 #pragma	once
 
+#include	"hal_gpio.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,6 +43,10 @@ int	ili9341Init(void) ;
 int	ili9341Identify(void) ;
 int	ili9341Config(int DevType) ;
 int	ili9341DeInit(void) ;
+
+void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len);
+void ili9341BacklightInit(void);
+void ili9341BacklightLevel(uint8_t Percent);
 
 void ili9341TestInit(void) ;
 void ili9341TestUpdate(void) ;

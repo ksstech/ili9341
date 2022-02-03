@@ -5,9 +5,11 @@
  *      Author: ammaree
  */
 
+#include	<string.h>
+
 #include	"ili9341.h"
+#include	"hal_config.h"
 #include	"hal_spi.h"
-#include	"hal_gpio.h"
 #include	"FreeRTOS_Support.h"
 #include	"fonts.h"
 
@@ -19,8 +21,7 @@
 
 #include	"esp_err.h"
 #include	"esp_system.h"
-
-#include	<string.h>
+#include	"driver/ledc.h"
 
 #define	debugFLAG					0xF000
 
@@ -190,6 +191,51 @@ void ili9341SendData(const uint8_t * data, int len) {
 		ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;  //Transmit!
 	}
 }
+
+void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len) {
+	ili9341SendCommand(cmd);
+	ili9341SendData(data, len);
+}
+
+// ################################### PWM backlight support #######################################
+
+ledc_timer_config_t ledc_timer = {
+    .duty_resolution	= LEDC_TIMER_13_BIT,
+    .freq_hz			= 5000,
+    .speed_mode			= LEDC_LOW_SPEED_MODE,	// timer mode
+    .timer_num			= LEDC_TIMER_1,			// timer index
+    .clk_cfg			= LEDC_AUTO_CLK,		// Auto select the source clock
+};
+
+ledc_channel_config_t ledc_channel = {
+    .channel    		= LEDC_CHANNEL_0,
+    .duty       		= 0,
+#if (HW_VARIANT == HW_WROVERKIT)
+    .gpio_num   		= ili9341GPIO_LIGHT,
+#endif
+	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+    .hpoint     		= 0,
+    .timer_sel  		= LEDC_TIMER_0,
+};
+
+void ili9341BacklightInit(void) {
+    ledc_timer_config(&ledc_timer);
+    ledc_timer.speed_mode	= LEDC_HIGH_SPEED_MODE;
+    ledc_timer.timer_num	= LEDC_TIMER_0;
+    ledc_timer_config(&ledc_timer);
+    ledc_fade_func_install(0);							// Initialize fade service.
+    ledc_channel_config(&ledc_channel) ;
+}
+
+void ili9341BacklightLevel(uint8_t Percent) {
+	uint32_t U32 = (100 - Percent) * 82;
+	if (U32 > 8191)
+		U32 = 8191;
+    ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, U32);
+    ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+}
+
+// ######################################## Public API #############################################
 
 int32_t ili9341GetID(void) {
 	ili9341SendCommand(0x04) ;
