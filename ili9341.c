@@ -337,7 +337,7 @@ int ili9341DeInit(void) {
 	gpio_reset_pin(ili9341GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
 	ESP_ERROR_CHECK(spi_bus_free(HSPI_HOST));
-	IF_TL(debugTRACK, "DeInit ILI9341/ST7789V device");
+	IF_PL(debugTRACK, "DeInit ILI9341/ST7789V device");
 	return erSUCCESS;
 }
 
@@ -351,7 +351,7 @@ int ili9341Config(int32_t DevType) {
 		lcd_init_cmds = st_init_cmds ;
 	else
 		return erFAILURE ;
-	IF_PRINT(debugTRACK, "Configured device type '%s'\n", DevType ? "ST7789V" : "ILI9341" ) ;
+	IF_P(debugTRACK, "Configured device type '%s'\n", DevType ? "ST7789V" : "ILI9341" ) ;
 	int cmd = 0 ;
 	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
 		ili9341SendCommand(lcd_init_cmds[cmd].cmd) ;
@@ -386,7 +386,7 @@ int ili9341PutChar(int cChr) {
 		return cChr;
 
 	const char * pFont = &font5X7[cChr * (ili9341FONT_WIDTH - 1)] ;
-	IF_PRINT(debugCMDS, "%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
+	IF_P(debugCMDS, "%c : %02x-%02x-%02x-%02x-%02x\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341b) ;
 	ili9341SendCommand(WR_MEM) ;
 	uint8_t cBuf[ili9341FONT_WIDTH] ;
