@@ -417,7 +417,7 @@ void ili9341TestInit(void) {
 	for (int i = 0; i < 2; ++i) {		// Allocate memory for the pixel buffers
 		LinesBuf[i] = heap_caps_malloc(320 * ili9341LINES_PARALLEL * sizeof(uint16_t), MALLOC_CAP_DMA);
 		assert(LinesBuf[i] != NULL);
-		IF_PRINT(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
+		IF_P(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
 	}
 	for (int x = 0; x < ili9341NUM_TRANS; ++x) {
 		if ((x & 1) == 0) {            					// Even transfers are commands
@@ -461,6 +461,6 @@ void ili9341TestUpdate(void) {
 		SentBuf = CalcBuf ;								// save buffer just calc(+sent) as sent
 		CalcBuf = CalcBuf ? 0 : 1 ;						// toggle index to select next buffer to calc
 	}
-	IF_PRINT(debugTRACK, "Frame=%d\r", CurFrame) ;
+	IF_P(debugTRACK, "Frame=%d\r", CurFrame) ;
 	++CurFrame;
 }
