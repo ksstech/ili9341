@@ -69,18 +69,18 @@ typedef enum { LCD_TYPE_ILI, LCD_TYPE_ST, LCD_TYPE_MAX } type_lcd_t;
 
 //The LCD needs a bunch of command/argument values to be initialized. They are stored in this struct.
 typedef struct {
-	uint8_t cmd;
-	uint8_t data[16];
-	uint8_t databytes; //No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
+	u8_t cmd;
+	u8_t data[16];
+	u8_t databytes; //No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
 } lcd_init_cmd_t;
 
 typedef struct ili9341_s {
-	epid_t		epidSPI;
-	uint16_t	segment;								// pixel horizontal
-	uint16_t	max_seg;
-	uint8_t 	page;
-	uint8_t 	max_page;
-	uint8_t 	mem_mode;
+	epid_t	epidSPI;
+	u16_t	segment;								// pixel horizontal
+	u16_t	max_seg;
+	u8_t 	page;
+	u8_t 	max_page;
+	u8_t 	mem_mode;
 } ili9341_t;
 
 // ################################ private static variables #######################################
@@ -95,11 +95,11 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) ;
 
 spi_device_interface_config_t ili9341_config = {
 	.mode			= 0,
-#if		(ili9341LCD_OVERCLOCK == 1)
+	#if (ili9341LCD_OVERCLOCK == 1)
 	.clock_speed_hz	= 26 * 1000 * 1000,				// 26 MHz
-#else
+	#else
 	.clock_speed_hz	= 10*1000*1000,           		// 10 MHz
-#endif
+	#endif
 	.spics_io_num	= ili9341GPIO_CS,				// CS pin
 	.queue_size 	= 7,           					// queue 7 transactions at a time
 	.pre_cb			= ili9341ToggleDClineCallback,	//Specify pre-transfer callback to handle D/C line
@@ -162,8 +162,8 @@ DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[] = {
 #define	ili9341NUM_TRANS			6
 spi_transaction_t trans[ili9341NUM_TRANS] = { 0 };
 
-int32_t CurFrame = 0, SentBuf, CalcBuf = 0;
-uint16_t *LinesBuf[2], CurCol = 0;
+int CurFrame = 0, SentBuf, CalcBuf = 0;
+u16_t *LinesBuf[2], CurCol = 0;
 
 // ####################################### private functions #######################################
 
@@ -171,7 +171,7 @@ uint16_t *LinesBuf[2], CurCol = 0;
  * Since command transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendCommand(const uint8_t cmd) {
+void ili9341SendCommand(const u8_t cmd) {
 	spi_transaction_t t = { 0 };					// D/C needs to be set to 0
 	t.length = BITS_IN_BYTE;
 	t.tx_buffer = &cmd;							// The data is the cmd itself
@@ -182,7 +182,7 @@ void ili9341SendCommand(const uint8_t cmd) {
  * Since data transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendData(const uint8_t * data, int len) {
+void ili9341SendData(const u8_t * data, int len) {
 	if (len) {
 		spi_transaction_t t = { 0 };
 		t.length = len * BITS_IN_BYTE;// Len is in bytes, transaction length is in bits.
@@ -192,7 +192,7 @@ void ili9341SendData(const uint8_t * data, int len) {
 	}
 }
 
-void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len) {
+void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
 	ili9341SendCommand(cmd);
 	ili9341SendData(data, len);
 }
@@ -210,9 +210,9 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel    		= LEDC_CHANNEL_0,
     .duty       		= 0,
-#if (HW_VARIANT == HW_WROVERKIT)
+	#if (HW_VARIANT == HW_WROVERKIT)
     .gpio_num   		= ili9341GPIO_LIGHT,
-#endif
+	#endif
 	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
     .hpoint     		= 0,
     .timer_sel  		= LEDC_TIMER_0,
@@ -227,8 +227,8 @@ void ili9341BacklightInit(void) {
     ledc_channel_config(&ledc_channel) ;
 }
 
-void ili9341BacklightLevel(uint8_t Percent) {
-	uint32_t U32 = (100 - Percent) * 82;
+void ili9341BacklightLevel(u8_t Percent) {
+	u32_t U32 = (100 - Percent) * 82;
 	if (U32 > 8191)
 		U32 = 8191;
     ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, U32);
@@ -237,19 +237,19 @@ void ili9341BacklightLevel(uint8_t Percent) {
 
 // ######################################## Public API #############################################
 
-int32_t ili9341GetID(void) {
+int ili9341GetID(void) {
 	ili9341SendCommand(0x04) ;
 	spi_transaction_t t = { 0 } ;
 	t.length = BITS_IN_BYTE * 3 ;
 	t.flags = SPI_TRANS_USE_RXDATA ;
 	t.user = (void *) 1 ;
 	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;
-	return *(int32_t *) t.rx_data ;
+	return *(int *) t.rx_data;
 }
 
-void ili9341SetColumnAddress(uint16_t CAstart, uint16_t CAend) {
+void ili9341SetColumnAddress(u16_t CAstart, u16_t CAend) {
 	ili9341SendCommand(SET_COL_AD);
-	uint8_t cBuf[4];
+	u8_t cBuf[4];
 	cBuf[0] = CAstart >> 8;
 	cBuf[1] = CAstart & 0xFF;
 	cBuf[2] = CAend >> 8;
@@ -257,9 +257,9 @@ void ili9341SetColumnAddress(uint16_t CAstart, uint16_t CAend) {
 	ili9341SendData(cBuf, sizeof(cBuf));
 }
 
-void ili9341SetPageAddress(uint16_t PAstart, uint16_t PAend) {
+void ili9341SetPageAddress(u16_t PAstart, u16_t PAend) {
 	ili9341SendCommand(SET_PAG_AD);
-	uint8_t cBuf[4];
+	u8_t cBuf[4];
 	cBuf[0] = PAstart >> 8;
 	cBuf[1] = PAstart & 0xFF;
 	cBuf[2] = PAend >> 8;
@@ -274,7 +274,7 @@ void ili9341SetPageAddress(uint16_t PAstart, uint16_t PAend) {
  * sent faster (compared to calling spi_device_transmit several times), and in
  * the mean while the lines for next transactions can get calculated.
  */
-void ili9341SendMultiLines(int ypos, uint16_t *linedata) {
+void ili9341SendMultiLines(int ypos, u16_t *linedata) {
 	myASSERT(trans[0].tx_data[0] == SET_COL_AD) ;
 	myASSERT(trans[2].tx_data[0] == SET_PAG_AD) ;
 	myASSERT(trans[4].tx_data[0] == WR_MEM) ;
@@ -343,7 +343,7 @@ int ili9341DeInit(void) {
 
 int ili9341Identify(void) { return ili9341GetID() ; }
 
-int ili9341Config(int32_t DevType) {
+int ili9341Config(int DevType) {
 	const lcd_init_cmd_t *lcd_init_cmds ;
 	if (DevType == LCD_TYPE_ILI)
 		lcd_init_cmds = ili_init_cmds ;
@@ -389,7 +389,7 @@ int ili9341PutChar(int cChr) {
 	IF_P(debugCMDS, "%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341b) ;
 	ili9341SendCommand(WR_MEM) ;
-	uint8_t cBuf[ili9341FONT_WIDTH] ;
+	u8_t cBuf[ili9341FONT_WIDTH] ;
 	int i ;
 	for (i = 0; i < (ili9341FONT_WIDTH - 1); cBuf[i++] = *pFont++) ;
 	cBuf[i] = 0x00 ;
@@ -409,15 +409,15 @@ int ili9341PutChar(int cChr) {
 
 void ili9341PutString(const char *pString) { while (*pString) ili9341PutChar(*pString++) ; }
 
-void ili9341_set_brightness(uint8_t level) { }
+void ili9341_set_brightness(u8_t level) { }
 
 // ################################## Diagnostic support functions #################################
 
 void ili9341TestInit(void) {
 	for (int i = 0; i < 2; ++i) {		// Allocate memory for the pixel buffers
-		LinesBuf[i] = heap_caps_malloc(320 * ili9341LINES_PARALLEL * sizeof(uint16_t), MALLOC_CAP_DMA);
+		LinesBuf[i] = heap_caps_malloc(320 * ili9341LINES_PARALLEL * sizeof(u16_t), MALLOC_CAP_DMA);
 		assert(LinesBuf[i] != NULL);
-		IF_P(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(uint16_t));
+		IF_P(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(u16_t));
 	}
 	for (int x = 0; x < ili9341NUM_TRANS; ++x) {
 		if ((x & 1) == 0) {            					// Even transfers are commands
@@ -443,7 +443,7 @@ void ili9341TestInit(void) {
 	SentBuf = -1 ;
 }
 
-void ili9341TestFillBuffer(uint16_t *dest, int line) {
+void ili9341TestFillBuffer(u16_t *dest, int line) {
 	for (int y = line; y < (line + ili9341LINES_PARALLEL); ++y) {
 		for (int x = 0; x < 320; ++x) *dest++ = CurCol;
 	}
