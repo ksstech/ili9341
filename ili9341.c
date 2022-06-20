@@ -1,31 +1,22 @@
 /*
  * ili9341.c
- *
- *  Created on: 11 Apr 2020
- *      Author: ammaree
+ * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include	<string.h>
-
-#include	"ili9341.h"
-#include	"hal_config.h"
-#include	"hal_spi.h"
-#include	"FreeRTOS_Support.h"
-#include	"fonts.h"
-
-#include	"endpoints.h"
-
-#include	"x_errors_events.h"
-#include 	"printfx.h"
-#include	"systiming.h"
-
-#include	"esp_err.h"
-#include	"esp_system.h"
-#include	"driver/ledc.h"
+#include "ili9341.h"
+#include "hal_config.h"
+#include "hal_spi.h"
+#include "FreeRTOS_Support.h"
+#include "fonts.h"
+#include "endpoints.h"
+#include "x_errors_events.h"
+#include "printfx.h"
+#include "systiming.h"
+#include "esp_err.h"
+#include "esp_system.h"
+#include "driver/ledc.h"
 
 #define	debugFLAG					0xF000
-
-#define	debugCMDS					(debugFLAG & 0x0001)
 
 #define	debugTIMING					(debugFLAG_GLOBAL & debugFLAG & 0x1000)
 #define	debugTRACK					(debugFLAG_GLOBAL & debugFLAG & 0x2000)
@@ -386,7 +377,7 @@ int ili9341PutChar(int cChr) {
 		return cChr;
 
 	const char * pFont = &font5X7[cChr * (ili9341FONT_WIDTH - 1)] ;
-	IF_P(debugCMDS, "%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
+//	P("%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
 	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341b) ;
 	ili9341SendCommand(WR_MEM) ;
 	u8_t cBuf[ili9341FONT_WIDTH] ;
@@ -444,9 +435,9 @@ void ili9341TestInit(void) {
 }
 
 void ili9341TestFillBuffer(u16_t *dest, int line) {
-	for (int y = line; y < (line + ili9341LINES_PARALLEL); ++y) {
-		for (int x = 0; x < 320; ++x) *dest++ = CurCol;
-	}
+	for (int y = line; y < (line + ili9341LINES_PARALLEL); ++y)
+		for (int x = 0; x < 320; ++x)
+			*dest++ = CurCol;
 }
 
 void ili9341TestUpdate(void) {
