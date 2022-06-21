@@ -201,7 +201,7 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel    		= LEDC_CHANNEL_0,
     .duty       		= 0,
-	#if (HW_VARIANT == HW_WROVERKIT)
+	#if (halVARIANT == HW_WROVERKIT)
     .gpio_num   		= ili9341GPIO_LIGHT,
 	#endif
 	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
