@@ -11,6 +11,7 @@
 #include "endpoints.h"
 #include "x_errors_events.h"
 #include "printfx.h"
+#include "syslog.h"
 #include "systiming.h"
 #include "esp_err.h"
 #include "esp_system.h"
@@ -201,7 +202,7 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel    		= LEDC_CHANNEL_0,
     .duty       		= 0,
-	#if (halVARIANT == HW_WROVERKIT)
+	#if (cmakeVARIANT == HW_WROVERKIT)
     .gpio_num   		= ili9341GPIO_LIGHT,
 	#endif
 	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
@@ -305,6 +306,17 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) {
 // ####################################### Public functions ########################################
 
 int ili9341Init(void) {
+	const spi_bus_config_t buscfg = {
+		.mosi_io_num	= ili9341GPIO_MOSI,
+		.miso_io_num	= ili9341GPIO_MISO,
+		.sclk_io_num	= ili9341GPIO_SCLK,
+		.quadwp_io_num	= -1,
+		.quadhd_io_num	= -1,
+		.max_transfer_sz = ili9341LINES_PARALLEL * 320 * 2+8,
+		.flags = 0
+	};
+	ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH2));
+
 	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
 
 	//Initialize non-SPI GPIOs
@@ -319,7 +331,17 @@ int ili9341Init(void) {
 	vTaskDelay(pdMS_TO_TICKS(100)) ;
 	IF_SYSTIMER_INIT(debugTIMING, stILI9341a, stMICROS, "ili9341A", 1, 1000);
 	IF_SYSTIMER_INIT(debugTIMING, stILI9341b, stMICROS, "ili9341B", 1, 1000);
-	return erSUCCESS;
+
+	int iRV = ili9341GetID();
+	if (iRV == erFAILURE)
+		goto exit;
+	IF_SL_INFO(debugTRACK, "Found '%s'", iRV == 0 ? "ILI9341" : "ST7789V");
+	iRV = ili9341Config(iRV);
+	if (iRV == erSUCCESS)
+		return iRV;
+exit:
+	SL_ERR("Failed to find/init ILI9341/ST7789V") ;
+	return erFAILURE;
 }
 
 int ili9341DeInit(void) {
@@ -331,8 +353,6 @@ int ili9341DeInit(void) {
 	IF_PL(debugTRACK, "DeInit ILI9341/ST7789V device");
 	return erSUCCESS;
 }
-
-int ili9341Identify(void) { return ili9341GetID() ; }
 
 int ili9341Config(int DevType) {
 	const lcd_init_cmd_t *lcd_init_cmds ;
