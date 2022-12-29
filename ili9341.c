@@ -30,8 +30,6 @@
 
 // ###################################### BUILD : CONFIG definitions ###############################
 
-#define	ili9341VERSION				"v0.0.0.1"
-
 #define	ili9341FONT					FONT5X7
 #define	ili9341FONT_HEIGHT			CONCAT2(ili9341FONT, _HEIGHT)
 #define	ili9341FONT_WIDTH			CONCAT2(ili9341FONT, _WIDTH)
