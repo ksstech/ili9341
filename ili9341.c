@@ -167,7 +167,7 @@ u16_t *LinesBuf[2], CurCol = 0;
  * Since command transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendCommand(const u8_t cmd) {
+void ili9341SendCommand(const uint8_t cmd) {
 	spi_transaction_t t = { 0 };					// D/C needs to be set to 0
 	t.length = BITS_IN_BYTE;
 	t.tx_buffer = &cmd;							// The data is the cmd itself
@@ -178,7 +178,7 @@ void ili9341SendCommand(const u8_t cmd) {
  * Since data transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendData(const u8_t * data, int len) {
+void ili9341SendData(const uint8_t * data, int len) {
 	if (len) {
 		spi_transaction_t t = { 0 };
 		t.length = len * BITS_IN_BYTE;// Len is in bytes, transaction length is in bits.
@@ -188,7 +188,7 @@ void ili9341SendData(const u8_t * data, int len) {
 	}
 }
 
-void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
+void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len) {
 	ili9341SendCommand(cmd);
 	ili9341SendData(data, len);
 }
@@ -309,7 +309,7 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) {
 
 // ####################################### Public functions ########################################
 
-int ili9341Init(void) {
+int ili9341InitSPI(void) {
 	const spi_bus_config_t buscfg = {
 		.mosi_io_num	= ili9341GPIO_MOSI,
 		.miso_io_num	= ili9341GPIO_MISO,
@@ -348,7 +348,7 @@ exit:
 	return erFAILURE;
 }
 
-int ili9341DeInit(void) {
+int ili9341DeInitSPI(void) {
 	gpio_reset_pin(ili9341GPIO_LIGHT);
 	gpio_reset_pin(ili9341GPIO_RESET);
 	gpio_reset_pin(ili9341GPIO_D_C_X);

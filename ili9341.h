@@ -40,13 +40,13 @@ enum {
 
 // ##################################### Functions prototypes ######################################
 
-int	ili9341Init(void) ;
+int	ili9341InitSPI(void) ;
 int	ili9341Config(int DevType) ;
-int	ili9341DeInit(void) ;
+int	ili9341DeInitSPI(void) ;
+void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len);
 
-void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len);
 void ili9341BacklightInit(void);
-void ili9341BacklightLevel(u8_t Percent);
+void ili9341BacklightLevel(uint8_t Percent);
 
 void ili9341TestInit(void) ;
 void ili9341TestUpdate(void) ;
