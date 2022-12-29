@@ -5,14 +5,18 @@
 
 #include "ili9341.h"
 #include "hal_config.h"
+#include "hal_gpio.h"
 #include "hal_spi.h"
-#include "FreeRTOS_Support.h"
+
 #include "fonts.h"
-#include "endpoints.h"
+#if	(ENABLE_EPID == 1)
+	#include "endpoints.h"
+#endif
 #include "x_errors_events.h"
 #include "printfx.h"
 #include "syslog.h"
 #include "systiming.h"
+
 #include "esp_err.h"
 #include "esp_system.h"
 #include "driver/ledc.h"
