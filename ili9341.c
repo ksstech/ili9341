@@ -52,15 +52,15 @@
 #define	LCD_TYPE					LCD_TYPE_320_240
 
 #if		(LCD_TYPE == LCD_TYPE_320_240)
-	#define	LCD_WIDTH					320		// pixels horizontal
-	#define	LCD_HEIGHT					240		// pixels vertical
+	#define	LCD_WIDTH_PX				320		// pixels horizontal
+	#define	LCD_HEIGHT_PX				240		// pixels vertical
 #else
 	#error "No/invalid LCD Type selected!!!"
 #endif
 
-#define	LCD_COLUMNS					(LCD_WIDTH / ili9341FONT_WIDTH)
-#define	LCD_LINES					(LCD_HEIGHT / ili9341FONT_HEIGHT)
-#define	LCD_SPARE_PIXELS			(LCD_WIDTH - (LCD_COLUMNS * ili9341FONT_WIDTH))
+#define	LCD_COLUMNS					(LCD_WIDTH_PX / ili9341FONT_WIDTH)
+#define	LCD_LINES					(LCD_HEIGHT_PX / ili9341FONT_HEIGHT)
+#define	LCD_SPARE_PIXELS			(LCD_WIDTH_PX - (LCD_COLUMNS * ili9341FONT_WIDTH))
 
 #define	ANOMALY_OFFSET				32		// XXX CHECK ????
 
@@ -93,7 +93,7 @@ typedef struct ili9341_s {
 
 // ################################ private static variables #######################################
 
-static ili9341_t sILI9341 = { .max_seg = LCD_WIDTH, .max_page = LCD_HEIGHT / ili9341FONT_HEIGHT } ;
+static ili9341_t sILI9341 = { .max_seg = LCD_WIDTH_PX, .max_page = LCD_HEIGHT_PX / ili9341FONT_HEIGHT } ;
 
 // ################################# Forward funtion declarations ##################################
 
