@@ -231,6 +231,13 @@ void ili9341BacklightLevel(u8_t Percent) {
     ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
 }
 
+#define	ili9341GPIO_LIGHT			GPIO_NUM_5
+
+void ili9341BackLightStatus(bool Status) {
+    gpio_set_direction(ili9341GPIO_LIGHT, GPIO_MODE_OUTPUT) ;
+    gpio_set_level(ili9341GPIO_LIGHT, !Status) ;
+}
+
 // ######################################## Public API #############################################
 
 int ili9341GetID(void) {
