@@ -26,6 +26,7 @@ extern "C" {
 #define ili9341LINES_PARALLEL 		16
 
 #define	ili9341WR_DSP_BRIGHTNESS	0x51
+#define ENABLE_EPID					0
 
 // ######################################### Enumerations ##########################################
 
