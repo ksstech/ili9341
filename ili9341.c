@@ -218,36 +218,51 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel    		= LEDC_CHANNEL_0,
     .duty       		= 0,
-	#if (cmakeVARIANT == HW_WROVERKIT)
+#if (cmakeVARIANT == HW_WROVERKIT)
     .gpio_num   		= ili9341GPIO_LIGHT,
-	#endif
+#endif
 	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
     .hpoint     		= 0,
     .timer_sel  		= LEDC_TIMER_0,
 };
 
 void ili9341BacklightInit(void) {
+#if defined(CONFIG_LV_DISP_BACKLIGHT_PWM)
     ledc_timer_config(&ledc_timer);
-    ledc_timer.speed_mode	= LEDC_HIGH_SPEED_MODE;
-    ledc_timer.timer_num	= LEDC_TIMER_0;
+    ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+    ledc_timer.timer_num = LEDC_TIMER_0;
     ledc_timer_config(&ledc_timer);
     ledc_fade_func_install(0);							// Initialize fade service.
-    ledc_channel_config(&ledc_channel) ;
+    ledc_channel_config(&ledc_channel);
+
+#elif defined(CONFIG_LV_DISP_BACKLIGHT_SWITCH)
+	u8_t u8 = ili9341WRCTRLD_BCTRL | ili9341WRCTRLD_DD | ili9341WRCTRLD_BL ;
+	ili9341_send_combo(ili9341WRCTRLD, &u8, sizeof(uint8_t)) ;
+
+#endif
 }
 
 void ili9341BacklightLevel(u8_t Percent) {
+#if defined(CONFIG_LV_DISP_BACKLIGHT_PWM)
 	u32_t U32 = (100 - Percent) * 82;
 	if (U32 > 8191)
 		U32 = 8191;
     ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, U32);
     ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+
+#elif defined(CONFIG_LV_DISP_BACKLIGHT_SWITCH)
+    U32 = ((u32_t)Percent * 10) >> 2;
+    Percent = U32 & 0x000000FF;
+    ili9341_send_combo(ili9341WRDISBV, &Percent, sizeof(l));
+#endif
+
 }
 
 #define	ili9341GPIO_LIGHT			GPIO_NUM_5
 
 void ili9341BackLightStatus(bool Status) {
-    gpio_set_direction(ili9341GPIO_LIGHT, GPIO_MODE_OUTPUT) ;
-    gpio_set_level(ili9341GPIO_LIGHT, !Status) ;
+    gpio_set_direction(ili9341GPIO_LIGHT, GPIO_MODE_OUTPUT);
+    gpio_set_level(ili9341GPIO_LIGHT, !Status);
 }
 
 // ######################################## Public API #############################################
