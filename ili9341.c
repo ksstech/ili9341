@@ -38,9 +38,15 @@
 #define	ili9341GPIO_RESET			GPIO_NUM_18
 #define	ili9341GPIO_SCLK			GPIO_NUM_19
 #define	ili9341GPIO_D_C_X			GPIO_NUM_21
-#define ili9341GPIO_CS				GPIO_NUM_22
-#define	ili9341GPIO_MOSI			GPIO_NUM_23
-#define	ili9341GPIO_MISO			GPIO_NUM_25
+#if CONFIG_IDF_TARGET_ESP32
+	#define ili9341GPIO_CS				GPIO_NUM_22
+	#define	ili9341GPIO_MOSI			GPIO_NUM_23
+	#define	ili9341GPIO_MISO			GPIO_NUM_25
+#elif CONFIG_IDF_TARGET_ESP32S3
+	#define ili9341GPIO_CS				GPIO_NUM_NC
+	#define	ili9341GPIO_MOSI			GPIO_NUM_NC
+	#define	ili9341GPIO_MISO			GPIO_NUM_NC
+#endif
 
 #define	ili9341LCD_OVERCLOCK		1
 #define ili9341LINES_PARALLEL 		16
@@ -221,7 +227,8 @@ ledc_channel_config_t ledc_channel = {
 #if (cmakeVARIANT == HW_WROVERKIT)
     .gpio_num   		= ili9341GPIO_LIGHT,
 #endif
-	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+//	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+	.speed_mode 		= LEDC_LOW_SPEED_MODE,
     .hpoint     		= 0,
     .timer_sel  		= LEDC_TIMER_0,
 };
@@ -229,7 +236,8 @@ ledc_channel_config_t ledc_channel = {
 void ili9341BacklightInit(void) {
 #if defined(CONFIG_LV_DISP_BACKLIGHT_PWM)
     ledc_timer_config(&ledc_timer);
-    ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+//    ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+    ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
     ledc_timer.timer_num = LEDC_TIMER_0;
     ledc_timer_config(&ledc_timer);
     ledc_fade_func_install(0);							// Initialize fade service.
@@ -353,9 +361,11 @@ int ili9341InitSPI(void) {
 		.max_transfer_sz = ili9341LINES_PARALLEL * 320 * 2+8,
 		.flags = 0
 	};
-	ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH2));
+//	ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH2));
+	ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
 
-	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
+//	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
+	ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
 
 	//Initialize non-SPI GPIOs
 	gpio_set_direction(ili9341GPIO_D_C_X, GPIO_MODE_OUTPUT);
@@ -387,7 +397,7 @@ int ili9341DeInitSPI(void) {
 	gpio_reset_pin(ili9341GPIO_RESET);
 	gpio_reset_pin(ili9341GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
-	ESP_ERROR_CHECK(spi_bus_free(HSPI_HOST));
+	ESP_ERROR_CHECK(spi_bus_free(SPI2_HOST));
 	IF_PL(debugTRACK, "DeInit ILI9341/ST7789V device");
 	return erSUCCESS;
 }
