@@ -362,10 +362,10 @@ int ili9341InitSPI(void) {
 		.flags = 0
 	};
 //	ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH2));
-	ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
+//	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle));	//Attach the LCD to the SPI bus
 
-//	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
-	ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &ili9341_config, &ili9341handle)) ;	//Attach the LCD to the SPI bus
+	ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
+	ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &ili9341_config, &ili9341handle));	//Attach the LCD to the SPI bus
 
 	//Initialize non-SPI GPIOs
 	gpio_set_direction(ili9341GPIO_D_C_X, GPIO_MODE_OUTPUT);
