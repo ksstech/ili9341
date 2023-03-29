@@ -41,8 +41,8 @@ void ili9341BacklightInit(void);
 void ili9341BacklightLevel(uint8_t Percent);
 void ili9341BackLightStatus(bool Status);
 
-void ili9341TestInit(void) ;
-void ili9341TestUpdate(void) ;
+int ili9341PutChar(int cChr);
+void ili9341PutString(const char *pString);
 
 #ifdef __cplusplus
 }
