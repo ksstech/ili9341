@@ -224,9 +224,9 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel    		= LEDC_CHANNEL_0,
     .duty       		= 0,
-#if (cmakePLTFRM == HW_DK41)
+	#if (cmakePLTFRM == HW_DK41)
     .gpio_num   		= ili9341GPIO_LIGHT,
-#endif
+	#endif
 //	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
 	.speed_mode 		= LEDC_LOW_SPEED_MODE,
     .hpoint     		= 0,
@@ -429,7 +429,7 @@ int ili9341Config(int DevType) {
 		vTaskDelay(500);
 	}
 
-	return erSUCCESS ;
+	return erSUCCESS;
 }
 
 // ############################## Text Character & String write functions ##########################
@@ -468,7 +468,7 @@ int ili9341PutChar(int cChr) {
 	return cChr ;
 }
 
-void ili9341PutString(const char *pString) { while (*pString) ili9341PutChar(*pString++) ; }
+void ili9341PutString(const char *pString) { while (*pString) ili9341PutChar(*pString++); }
 
 void ili9341_set_brightness(u8_t level) { }
 
