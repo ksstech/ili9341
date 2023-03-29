@@ -465,7 +465,7 @@ int ili9341PutChar(int cChr) {
 //		ili9341SetPageAddr(sILI9341.page) ;
 //		ili9341SetSegmentAddr(0) ;
 	}
-	IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341b) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341b);
 	return cChr ;
 }
 
