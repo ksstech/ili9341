@@ -423,12 +423,13 @@ int ili9341Config(int DevType) {
 	#if	(ENABLE_EPID)
 	sILI9341.epidSPI.val = DEFN_EPID(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL) ;
 	#endif
+#if 0
 	ili9341TestInit();
 	for (int i = 0; i < 50; ++i) {
 		ili9341TestUpdate();
 		vTaskDelay(500);
 	}
-
+#endif
 	return erSUCCESS;
 }
 
