@@ -211,7 +211,11 @@ void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len) {
 ledc_timer_config_t ledc_timer = {
     .duty_resolution	= LEDC_TIMER_13_BIT,
     .freq_hz			= 5000,
+	#if SOC_LEDC_SUPPORT_HS_MODE
+	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+	#else
     .speed_mode			= LEDC_LOW_SPEED_MODE,	// timer mode
+	#endif
     .timer_num			= LEDC_TIMER_1,			// timer index
     .clk_cfg			= LEDC_AUTO_CLK,		// Auto select the source clock
 };
@@ -222,8 +226,11 @@ ledc_channel_config_t ledc_channel = {
 	#if (cmakePLTFRM == HW_DK41)
     .gpio_num   		= ili9341GPIO_LIGHT,
 	#endif
-//	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+	#if SOC_LEDC_SUPPORT_HS_MODE
+	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+	#else
 	.speed_mode 		= LEDC_LOW_SPEED_MODE,
+	#endif
     .hpoint     		= 0,
     .timer_sel  		= LEDC_TIMER_0,
 };
@@ -231,8 +238,11 @@ ledc_channel_config_t ledc_channel = {
 void ili9341BacklightInit(void) {
 	#if (ili9341BACKLIGHT_MODE == 1)
     ledc_timer_config(&ledc_timer);
-//	ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+	#if SOC_LEDC_SUPPORT_HS_MODE
+	ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+	#else
     ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
+	#endif
     ledc_timer.timer_num = LEDC_TIMER_0;
     ledc_timer_config(&ledc_timer);
     ledc_fade_func_install(0);							// Initialize fade service.
@@ -249,8 +259,13 @@ void ili9341BacklightLevel(u8_t Percent) {
 	u32_t U32 = (100 - Percent) * 82;
 	if (U32 > 8191)
 		U32 = 8191;
-    ledc_set_duty(ledc_channel.speed_mode, ledc_channel.channel, U32);
-    ledc_update_duty(ledc_channel.speed_mode, ledc_channel.channel);
+	#if SOC_LEDC_SUPPORT_HS_MODE
+    ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel, U32);
+    ledc_update_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel);
+	#else
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel, U32);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel);
+	#endif
 
 	#elif (ili9341BACKLIGHT_MODE == 0)
     U32 = ((u32_t)Percent * 10) >> 2;
