@@ -252,6 +252,7 @@ void ili9341BacklightInit(void) {
 	u8_t u8 = ili9341WRCTRLD_BCTRL | ili9341WRCTRLD_DD | ili9341WRCTRLD_BL ;
 	ili9341_send_combo(ili9341WRCTRLD, &u8, sizeof(uint8_t)) ;
 	#endif
+	ili9341BacklightLevel(0);
 }
 
 void ili9341BacklightLevel(u8_t Percent) {
