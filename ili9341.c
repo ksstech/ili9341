@@ -83,7 +83,7 @@ typedef struct {
 
 typedef struct ili9341_s {
 	#if	(ENABLE_EPID == 1)
-	epid_t	epidSPI;
+	epid_t	epid;
 	#endif
 	u16_t	segment;								// pixel horizontal
 	u16_t	max_seg;
@@ -429,7 +429,7 @@ int ili9341Config(int DevType) {
 	}
 	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
 	#if	(ENABLE_EPID)
-	sILI9341.epidSPI.val = DEFN_EPID(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL);
+	sILI9341.epid.val = EP_DEF0(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL,0);
 	#endif
 	return erSUCCESS;
 }
@@ -445,7 +445,7 @@ int ili9341Config(int DevType) {
  */
 int ili9341PutChar(int cChr) {
 	#if	(ENABLE_EPID == 1)
-	if (sILI9341.epidSPI.devclass != devILI9341 || sILI9341.epidSPI.subclass != subDSP320X240)
+	if (sILI9341.epid.devclass != devILI9341 || sILI9341.epid.subclass != subDSP320X240)
 		return cChr;
 	#endif
 	const char * pFont = &font5X7[cChr * (ili9341FONT_WIDTH - 1)] ;
