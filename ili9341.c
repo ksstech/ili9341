@@ -456,8 +456,7 @@ int ili9341PutChar(int cChr) {
 	sILI9341.segment += ili9341FONT_WIDTH;
 	if (sILI9341.segment >= (sILI9341.max_seg - LCD_SPARE_PIXELS)) {
 		++sILI9341.page;								// update the cursor location
-		if (sILI9341.page == sILI9341.max_page)
-			sILI9341.page = 0 ;
+		if (sILI9341.page == sILI9341.max_page) sILI9341.page = 0 ;
 //		ili9341SetPageAddr(sILI9341.page) ;
 //		ili9341SetSegmentAddr(0) ;
 	}
