@@ -3,8 +3,9 @@
  * Copyright (c) 2014-22 Andre M. Maree / KSS Technologies (Pty) Ltd.
  */
 
-#include "ili9341.h"
 #include "hal_config.h"
+
+#if (halHAS_ILI9341 > 0)
 #include "hal_gpio.h"
 #include "hal_spi.h"
 
@@ -530,3 +531,5 @@ void ili9341Test(void) {
 		vTaskDelay(500);
 	}
 }
+
+#endif
