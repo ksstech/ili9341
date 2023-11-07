@@ -356,6 +356,16 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t) {
 	gpio_set_level(ili9341GPIO_D_C_X, dc);
 }
 
+int ili9341DeInitSPI(void) {
+	gpio_reset_pin(ili9341GPIO_LIGHT);
+	gpio_reset_pin(ili9341GPIO_RESET);
+	gpio_reset_pin(ili9341GPIO_D_C_X);
+	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
+	ESP_ERROR_CHECK(spi_bus_free(SPI2_HOST));
+	IF_P(debugTRACK, "DeInit ILI9341/ST7789V device\r\n");
+	return erSUCCESS;
+}
+
 // ####################################### Public functions ########################################
 
 int ili9341InitSPI(void) {
@@ -398,16 +408,6 @@ int ili9341InitSPI(void) {
 exit:
 	IF_P(debugTRACK, "Failed to find/init ILI9341/ST7789V");
 	return erFAILURE;
-}
-
-int ili9341DeInitSPI(void) {
-	gpio_reset_pin(ili9341GPIO_LIGHT);
-	gpio_reset_pin(ili9341GPIO_RESET);
-	gpio_reset_pin(ili9341GPIO_D_C_X);
-	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
-	ESP_ERROR_CHECK(spi_bus_free(SPI2_HOST));
-	IF_P(debugTRACK, "DeInit ILI9341/ST7789V device\r\n");
-	return erSUCCESS;
 }
 
 int ili9341Config(int DevType) {
