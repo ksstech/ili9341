@@ -366,6 +366,27 @@ int ili9341DeInitSPI(void) {
 	return erSUCCESS;
 }
 
+int ili9341Config(int DevType) {
+	const lcd_init_cmd_t *lcd_init_cmds;
+	if (DevType == LCD_TYPE_ILI) lcd_init_cmds = ili_init_cmds;
+	else if (DevType == LCD_TYPE_ST) lcd_init_cmds = st_init_cmds;
+	else return erFAILURE;
+	IF_P(debugTRACK, "Configured device type '%s'\r\n", DevType ? "ST7789V" : "ILI9341" );
+
+	int cmd = 0;
+	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
+		ili9341SendCommand(lcd_init_cmds[cmd].cmd);
+		ili9341SendData(lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes & 0x1F);
+		if (lcd_init_cmds[cmd].databytes & 0x80) vTaskDelay(pdMS_TO_TICKS(100));
+		++cmd;
+	}
+	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
+	#if	(ENABLE_EPID)
+	sILI9341.epid.val = EP_DEF0(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL,0);
+	#endif
+	return erSUCCESS;
+}
+
 // ####################################### Public functions ########################################
 
 int ili9341InitSPI(void) {
@@ -406,30 +427,6 @@ int ili9341InitSPI(void) {
 exit:
 	IF_P(debugTRACK, "Failed to find/init ILI9341/ST7789V");
 	return erFAILURE;
-}
-
-int ili9341Config(int DevType) {
-	const lcd_init_cmd_t *lcd_init_cmds;
-	if (DevType == LCD_TYPE_ILI)
-		lcd_init_cmds = ili_init_cmds;
-	else if (DevType == LCD_TYPE_ST)
-		lcd_init_cmds = st_init_cmds;
-	else
-		return erFAILURE;
-	IF_P(debugTRACK, "Configured device type '%s'\r\n", DevType ? "ST7789V" : "ILI9341" );
-	int cmd = 0;
-	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
-		ili9341SendCommand(lcd_init_cmds[cmd].cmd);
-		ili9341SendData(lcd_init_cmds[cmd].data, lcd_init_cmds[cmd].databytes & 0x1F);
-		if (lcd_init_cmds[cmd].databytes & 0x80)
-			vTaskDelay(pdMS_TO_TICKS(100));
-		++cmd;
-	}
-	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
-	#if	(ENABLE_EPID)
-	sILI9341.epid.val = EP_DEF0(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL,0);
-	#endif
-	return erSUCCESS;
 }
 
 // ############################## Text Character & String write functions ##########################
