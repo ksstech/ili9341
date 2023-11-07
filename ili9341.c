@@ -399,12 +399,10 @@ int ili9341InitSPI(void) {
 	IF_SYSTIMER_INIT(debugTIMING, stILI9341b, stMICROS, "ili9341B", 1, 1000);
 
 	int iRV = ili9341GetID();
-	if (iRV == erFAILURE)
-		goto exit;
+	if (iRV == erFAILURE) goto exit;
 	IF_P(debugTRACK, "Found '%s'", iRV == 0 ? "ILI9341" : "ST7789V");
 	iRV = ili9341Config(iRV);
-	if (iRV == erSUCCESS)
-		return iRV;
+	if (iRV == erSUCCESS) return iRV;
 exit:
 	IF_P(debugTRACK, "Failed to find/init ILI9341/ST7789V");
 	return erFAILURE;
