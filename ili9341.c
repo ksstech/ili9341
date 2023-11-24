@@ -47,6 +47,7 @@
 
 // ############################################ Macros #############################################
 
+
 // ######################################### Enumerations ##########################################
 
 typedef enum { halLCD_ILI9341 = 1, halLCD_ST7798V = 2, LCD_TYPE_MAX } type_lcd_t;
@@ -78,7 +79,7 @@ static ili9341_t sILI9341 = { .max_seg = halLCD_MAX_PX, .max_page = halLCD_MAX_R
 
 // ################################# Forward funtion declarations ##################################
 
-void ili9341ToggleDClineCallback(spi_transaction_t *t) ;
+void ili9341ToggleDClineCallback(spi_transaction_t *t);
 
 // ###################################### Private variables ########################################
 
@@ -160,28 +161,28 @@ u16_t *LinesBuf[2], CurCol = 0;
  * Since command transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendCommand(const uint8_t cmd) {
+void ili9341SendCommand(const u8_t cmd) {
 	spi_transaction_t t = { 0 };					// D/C needs to be set to 0
 	t.length = BITS_IN_BYTE;
 	t.tx_buffer = &cmd;							// The data is the cmd itself
-	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;
+	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t));
 }
 
 /* Send data to the LCD, waits until the transfer is complete.
  * Since data transactions are usually small, they are handled in polling
  * mode for higher speed. The overhead of interrupt transactions is more than
  * just waiting for the transaction to complete. */
-void ili9341SendData(const uint8_t * data, int len) {
+void ili9341SendData(const u8_t * data, int len) {
 	if (len) {
 		spi_transaction_t t = { 0 };
 		t.length = len * BITS_IN_BYTE;// Len is in bytes, transaction length is in bits.
 		t.tx_buffer = data;								// Data
 		t.user = (void*) 1;							// D/C needs to be set to 1
-		ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;  //Transmit!
+		ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t));  //Transmit!
 	}
 }
 
-void ili9341SendCombo(const uint8_t cmd, const uint8_t * data, int len) {
+void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
 	ili9341SendCommand(cmd);
 	ili9341SendData(data, len);
 }
@@ -216,10 +217,10 @@ ledc_channel_config_t ledc_channel = {
 };
 
 void ili9341BacklightLevel(u8_t Percent) {
-	#if (ili9341BACKLIGHT_MODE == 1)
+#if (ili9341BACKLIGHT_MODE == 1)
 	u32_t U32 = (100 - Percent) * 82;
-	if (U32 > 8191)
-		U32 = 8191;
+	if (U32 > 8191) U32 = 8191;
+
 	#if SOC_LEDC_SUPPORT_HS_MODE
     ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel, U32);
     ledc_update_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel);
@@ -228,11 +229,11 @@ void ili9341BacklightLevel(u8_t Percent) {
     ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel);
 	#endif
 
-	#elif (ili9341BACKLIGHT_MODE == 0)
+#elif (ili9341BACKLIGHT_MODE == 0)
     U32 = ((u32_t)Percent * 10) >> 2;
     Percent = U32 & 0x000000FF;
     ili9341_send_combo(ili9341WRDISBV, &Percent, sizeof(l));
-	#endif
+#endif
 }
 
 void ili9341BackLightStatus(bool Status) {
@@ -241,7 +242,7 @@ void ili9341BackLightStatus(bool Status) {
 }
 
 void ili9341BacklightInit(void) {
-	#if (ili9341BACKLIGHT_MODE == 1)
+#if (ili9341BACKLIGHT_MODE == 1)
     ledc_timer_config(&ledc_timer);
 	#if SOC_LEDC_SUPPORT_HS_MODE
 	ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
@@ -253,22 +254,22 @@ void ili9341BacklightInit(void) {
     ledc_fade_func_install(0);							// Initialize fade service.
     ledc_channel_config(&ledc_channel);
 
-	#elif (ili9341BACKLIGHT_MODE == 0)
-	u8_t u8 = ili9341WRCTRLD_BCTRL | ili9341WRCTRLD_DD | ili9341WRCTRLD_BL ;
-	ili9341_send_combo(ili9341WRCTRLD, &u8, sizeof(uint8_t)) ;
-	#endif
+#elif (ili9341BACKLIGHT_MODE == 0)
+	u8_t u8 = ili9341WRCTRLD_BCTRL | ili9341WRCTRLD_DD | ili9341WRCTRLD_BL;
+	ili9341_send_combo(ili9341WRCTRLD, &u8, sizeof(u8_t));
+#endif
 	ili9341BacklightLevel(0);
 }
 
 // ######################################## Public API #############################################
 
 int ili9341GetID(void) {
-	ili9341SendCommand(0x04) ;
-	spi_transaction_t t = { 0 } ;
-	t.length = BITS_IN_BYTE * 3 ;
-	t.flags = SPI_TRANS_USE_RXDATA ;
-	t.user = (void *) 1 ;
-	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t)) ;
+	ili9341SendCommand(0x04);
+	spi_transaction_t t = { 0 };
+	t.length = BITS_IN_BYTE * 3;
+	t.flags = SPI_TRANS_USE_RXDATA;
+	t.user = (void *) 1;
+	ESP_ERROR_CHECK(spi_device_polling_transmit(ili9341handle, &t));
 	return *(int *) t.rx_data;
 }
 
@@ -436,12 +437,12 @@ int ili9341PutChar(int cChr) {
 	sILI9341.segment += halLCD_FONT_PX;
 	if (sILI9341.segment >= (sILI9341.max_seg - halLCD_SPARE_PX)) {
 		++sILI9341.page;								// update the cursor location
-		if (sILI9341.page == sILI9341.max_page) sILI9341.page = 0 ;
-//		ili9341SetPageAddr(sILI9341.page) ;
-//		ili9341SetSegmentAddr(0) ;
+		if (sILI9341.page == sILI9341.max_page) sILI9341.page = 0;
+//		ili9341SetPageAddr(sILI9341.page);
+//		ili9341SetSegmentAddr(0);
 	}
 	IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341b);
-	return cChr ;
+	return cChr;
 }
 
 void ili9341PutString(const char *pString) { while (*pString) ili9341PutChar(*pString++); }
@@ -497,7 +498,7 @@ void ili9341TestUpdate(void) {
 		IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341a);
 
 		SentBuf = CalcBuf;								// save buffer just calc(+sent) as sent
-		CalcBuf = CalcBuf? 0 : 1 ;						// toggle index to select next buffer to calc
+		CalcBuf = CalcBuf? 0 : 1;						// toggle index to select next buffer to calc
 	}
 	IF_P(debugTRACK, "Frame=%d\r", CurFrame);
 	++CurFrame;
