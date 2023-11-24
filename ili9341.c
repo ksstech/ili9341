@@ -8,6 +8,7 @@
 #if (halHAS_ILI9341 > 0)
 #include "hal_gpio.h"
 #include "hal_spi.h"
+#include "ili9341.h"
 
 #include "fonts.h"
 #if	(ENABLE_EPID == 1)
@@ -29,11 +30,7 @@
 #define	debugPARAM					(debugFLAG_GLOBAL & debugFLAG & 0x4000)
 #define	debugRESULT					(debugFLAG_GLOBAL & debugFLAG & 0x8000)
 
-// ###################################### BUILD : CONFIG definitions ###############################
-
-#define	ili9341FONT					FONT5X7
-#define	ili9341FONT_HEIGHT			CONCAT2(ili9341FONT, _HEIGHT)
-#define	ili9341FONT_WIDTH			CONCAT2(ili9341FONT, _WIDTH)
+// ####################################### LCD definitions #########################################
 
 #define	ili9341GPIO_LIGHT			GPIO_NUM_5
 #define	ili9341GPIO_RESET			GPIO_NUM_18
@@ -48,29 +45,11 @@
 #define	ili9341WR_DSP_BRIGHTNESS	0x51
 #define ili9341BACKLIGHT_MODE		1			// 0=ON/OFF  1=PWM
 
-// ####################################### LCD definitions #########################################
-
-#define	LCD_TYPE_320_240			1		// standard
-#define	LCD_TYPE					LCD_TYPE_320_240
-
-#if	(LCD_TYPE == LCD_TYPE_320_240)
-	#define	LCD_WIDTH_PX				320		// pixels horizontal
-	#define	LCD_HEIGHT_PX				240		// pixels vertical
-#else
-	#error "No/invalid LCD Type selected!!!"
-#endif
-
-#define	LCD_COLUMNS					(LCD_WIDTH_PX / ili9341FONT_WIDTH)
-#define	LCD_LINES					(LCD_HEIGHT_PX / ili9341FONT_HEIGHT)
-#define	LCD_SPARE_PIXELS			(LCD_WIDTH_PX - (LCD_COLUMNS * ili9341FONT_WIDTH))
-
-#define	ANOMALY_OFFSET				32		// XXX CHECK ????
-
 // ############################################ Macros #############################################
 
 // ######################################### Enumerations ##########################################
 
-typedef enum { LCD_TYPE_ILI, LCD_TYPE_ST, LCD_TYPE_MAX } type_lcd_t;
+typedef enum { halLCD_ILI9341 = 1, halLCD_ST7798V = 2, LCD_TYPE_MAX } type_lcd_t;
 enum { SET_COL_AD = 0x2A, SET_PAG_AD = 0x2B, WR_MEM = 0x2C };
 
 // ########################################## Structures ###########################################
@@ -95,7 +74,7 @@ typedef struct ili9341_s {
 
 // ################################ private static variables #######################################
 
-static ili9341_t sILI9341 = { .max_seg = LCD_WIDTH_PX, .max_page = LCD_HEIGHT_PX / ili9341FONT_HEIGHT } ;
+static ili9341_t sILI9341 = { .max_seg = halLCD_MAX_PX, .max_page = halLCD_MAX_ROW };
 
 // ################################# Forward funtion declarations ##################################
 
@@ -369,8 +348,8 @@ int ili9341DeInitSPI(void) {
 
 int ili9341Config(int DevType) {
 	const lcd_init_cmd_t *lcd_init_cmds;
-	if (DevType == LCD_TYPE_ILI) lcd_init_cmds = ili_init_cmds;
-	else if (DevType == LCD_TYPE_ST) lcd_init_cmds = st_init_cmds;
+	if (DevType == halLCD_ILI9341) lcd_init_cmds = ili_init_cmds;
+	else if (DevType == halLCD_ST7798V) lcd_init_cmds = st_init_cmds;
 	else return erFAILURE;
 	IF_P(debugTRACK, "Configured device type '%s'\r\n", DevType ? "ST7789V" : "ILI9341" );
 
@@ -444,18 +423,18 @@ int ili9341PutChar(int cChr) {
 	if (sILI9341.epid.devclass != devILI9341 || sILI9341.epid.subclass != subDSP320X240)
 		return cChr;
 	#endif
-	const char * pFont = &font5X7[cChr * (ili9341FONT_WIDTH - 1)] ;
+	const char * pFont = &font5X7[cChr * (halLCD_FONT_PX - 1)];
 //	P("%c : %02x-%02x-%02x-%02x-%02x\r\n", cChr, *pFont, *(pFont + 1), *(pFont + 2), *(pFont + 3), *(pFont + 4));
-	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341b) ;
-	ili9341SendCommand(WR_MEM) ;
-	u8_t cBuf[ili9341FONT_WIDTH] ;
-	int i ;
-	for (i = 0; i < (ili9341FONT_WIDTH - 1); cBuf[i++] = *pFont++) ;
-	cBuf[i] = 0x00 ;
-	ili9341SendData(cBuf, sizeof(cBuf)) ;
+	IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341b);
+	ili9341SendCommand(WR_MEM);
+	u8_t cBuf[halLCD_FONT_PX];
+	int i;
+	for (i = 0; i < (halLCD_FONT_PX - 1); cBuf[i++] = *pFont++);
+	cBuf[i] = 0x00;
+	ili9341SendData(cBuf, sizeof(cBuf));
 
-	sILI9341.segment += ili9341FONT_WIDTH;
-	if (sILI9341.segment >= (sILI9341.max_seg - LCD_SPARE_PIXELS)) {
+	sILI9341.segment += halLCD_FONT_PX;
+	if (sILI9341.segment >= (sILI9341.max_seg - halLCD_SPARE_PX)) {
 		++sILI9341.page;								// update the cursor location
 		if (sILI9341.page == sILI9341.max_page) sILI9341.page = 0 ;
 //		ili9341SetPageAddr(sILI9341.page) ;
