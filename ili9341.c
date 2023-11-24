@@ -402,11 +402,11 @@ int ili9341InitSPI(void) {
 
 	int iRV = ili9341GetID();
 	if (iRV == erFAILURE) goto exit;
-	IF_P(debugTRACK, "Found '%s'", iRV == 0 ? "ILI9341" : "ST7789V");
+	IF_P(debugTRACK, "Found %d=%s ", iRV, iRV == halLCD_ILI9341 ? "ILI9341" : "ST7789V");
 	iRV = ili9341Config(iRV);
 	if (iRV == erSUCCESS) return iRV;
 exit:
-	IF_P(debugTRACK, "Failed to find/init ILI9341/ST7789V");
+	IF_P(debugTRACK, "Error %d, failed to find/init ILI9341/ST7789V", iRV);
 	return erFAILURE;
 }
 
