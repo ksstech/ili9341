@@ -4,9 +4,9 @@
 
 #include "hal_config.h"
 
-#if (halHAS_ILI9341 > 0)
+#if (halHAS_ILI9341 > 0) && (cmakeGUI == 1)
 #include "hal_gpio.h"
-#include "hal_spi.h"
+#include "hal_spi_master.h"
 #include "ili9341.h"
 
 #include "fonts.h"
@@ -50,6 +50,7 @@
 // ######################################### Enumerations ##########################################
 
 typedef enum { halLCD_ILI9341 = 1, halLCD_ST7798V = 2, LCD_TYPE_MAX } type_lcd_t;
+
 enum { SET_COL_AD = 0x2A, SET_PAG_AD = 0x2B, WR_MEM = 0x2C };
 
 // ########################################## Structures ###########################################
