@@ -3,7 +3,7 @@
 set( srcs "ili9341.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires driver )
+set( requires common driver )
 set( priv_requires fonts hal_esp32 printfx syslog systiming )
 
 idf_component_register(
