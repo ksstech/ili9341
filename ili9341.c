@@ -46,6 +46,13 @@
 
 // ############################################ Macros #############################################
 
+#define ENABLE_EPID					0
+
+#define	ili9341WRDISBV				0x51
+#define	ili9341WRCTRLD				0x53
+#define	ili9341WRCTRLD_BCTRL		0x20
+#define	ili9341WRCTRLD_DD			0x08
+#define	ili9341WRCTRLD_BL			0x04
 
 // ######################################### Enumerations ##########################################
 
