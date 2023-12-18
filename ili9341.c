@@ -4,7 +4,7 @@
 
 #include "hal_config.h"
 
-#if (halHAS_ILI9341 > 0) && (cmakeGUI == 1)
+#if (halHAS_ILI9341 > 0) && (buildGUI == 1)
 #include "hal_gpio.h"
 #include "hal_spi_master.h"
 #include "ili9341.h"
@@ -211,7 +211,7 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel    		= LEDC_CHANNEL_0,
     .duty       		= 0,
-	#if (cmakePLTFRM == HW_DK41)
+	#if (buildPLTFRM == HW_DK41)
     .gpio_num   		= ili9341GPIO_LIGHT,
 	#endif
 	#if SOC_LEDC_SUPPORT_HS_MODE
