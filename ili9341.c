@@ -4,7 +4,7 @@
 
 #include "hal_config.h"
 
-#if (halHAS_ILI9341 > 0) && (buildGUI == 1)
+#if (halHAS_ILI9341 > 0)
 #include "hal_gpio.h"
 #include "hal_spi_master.h"
 #include "ili9341.h"
@@ -223,24 +223,26 @@ ledc_channel_config_t ledc_channel = {
     .timer_sel  		= LEDC_TIMER_0,
 };
 
-void ili9341BacklightLevel(u8_t Percent) {
-#if (ili9341BACKLIGHT_MODE == 1)
-	u32_t U32 = (100 - Percent) * 82;
+u8_t ili9341BacklightLevel(u8_t Percent) {
+	if (Percent > 100) Percent %= 100;
+	#if (ili9341BACKLIGHT_MODE == 0)
+    u8_t U8 = Percent * 2;
+	U8 += U8 >> 2;
+    ili9341_send_combo(ili9341WRDISBV, &U8, sizeof(U8));
+
+	#elif (ili9341BACKLIGHT_MODE == 1)
+	u32_t U32 = Percent * 82;
 	if (U32 > 8191) U32 = 8191;
 
-	#if SOC_LEDC_SUPPORT_HS_MODE
-    ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel, U32);
-    ledc_update_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel);
-	#else
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel, U32);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel);
+		#if SOC_LEDC_SUPPORT_HS_MODE
+    	ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel, U32);
+    	ledc_update_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel);
+		#else
+    	ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel, U32);
+    	ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel);
+		#endif
 	#endif
-
-#elif (ili9341BACKLIGHT_MODE == 0)
-    U32 = ((u32_t)Percent * 10) >> 2;
-    Percent = U32 & 0x000000FF;
-    ili9341_send_combo(ili9341WRDISBV, &Percent, sizeof(l));
-#endif
+	return Percent;
 }
 
 void ili9341BackLightStatus(bool Status) {

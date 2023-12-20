@@ -5,6 +5,7 @@
 #pragma	once
 
 #include "definitions.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +31,7 @@ void ili9341SendData(const u8_t * data, int len);
 void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len);
 
 void ili9341BacklightInit(void);
-void ili9341BacklightLevel(u8_t Percent);
+u8_t ili9341BacklightLevel(u8_t Percent);
 void ili9341BackLightStatus(bool Status);
 
 int ili9341PutChar(int cChr);
