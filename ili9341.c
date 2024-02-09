@@ -5,22 +5,18 @@
 #include "hal_config.h"
 
 #if (halHAS_ILI9341 > 0)
-#include "hal_gpio.h"
-#include "hal_spi_master.h"
-#include "ili9341.h"
-
-#include "fonts.h"
+#include "esp_err.h"
+#include "esp_system.h"
+#include "driver/spi_master.h"
 #if	(ENABLE_EPID == 1)
 	#include "endpoints.h"
 #endif
+#include "fonts.h"
+#include "hal_gpio.h"
 #include "x_errors_events.h"
 #include "printfx.h"
 #include "syslog.h"
 #include "systiming.h"
-
-#include "esp_err.h"
-#include "esp_system.h"
-#include "driver/ledc.h"
 
 #define	debugFLAG					0xF000
 
