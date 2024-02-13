@@ -1,6 +1,4 @@
-/*
- * ili9341.h
- */
+// ili9341.h
 
 #pragma	once
 
