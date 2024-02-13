@@ -1,10 +1,8 @@
-/*
- * ili9341.c - Copyright (c) 2014-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
- */
+// ili9341.c - Copyright (c) 2014-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
 
 #include "hal_config.h"
 
-#if (halHAS_ILI9341 > 0)
+#if (HAL_ILI9341 > 0)
 #include "esp_err.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
@@ -192,6 +190,7 @@ void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
 
 // ################################### PWM backlight support #######################################
 
+#if (buildGUI == 1) || (buildGUI == 2) || (buildGUI == 3)
 ledc_timer_config_t ledc_timer = {
     .duty_resolution	= LEDC_TIMER_13_BIT,
     .freq_hz			= 5000,
@@ -247,24 +246,25 @@ void ili9341BackLightStatus(bool Status) {
 }
 
 void ili9341BacklightInit(void) {
-#if (ili9341BACKLIGHT_MODE == 1)
+	#if (ili9341BACKLIGHT_MODE == 1)
     ledc_timer_config(&ledc_timer);
-	#if SOC_LEDC_SUPPORT_HS_MODE
-	ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
-	#else
-    ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
-	#endif
+		#if SOC_LEDC_SUPPORT_HS_MODE
+		ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+		#else
+    	ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;
+		#endif
     ledc_timer.timer_num = LEDC_TIMER_0;
     ledc_timer_config(&ledc_timer);
     ledc_fade_func_install(0);							// Initialize fade service.
     ledc_channel_config(&ledc_channel);
 
-#elif (ili9341BACKLIGHT_MODE == 0)
+	#elif (ili9341BACKLIGHT_MODE == 0)
 	u8_t u8 = ili9341WRCTRLD_BCTRL | ili9341WRCTRLD_DD | ili9341WRCTRLD_BL;
 	ili9341_send_combo(ili9341WRCTRLD, &u8, sizeof(u8_t));
-#endif
+	#endif
 	ili9341BacklightLevel(0);
 }
+#endif
 
 // ######################################## Public API #############################################
 
