@@ -6,6 +6,7 @@
 #include "esp_err.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
+#include "driver/ledc.h"
 #if	(ENABLE_EPID == 1)
 	#include "endpoints.h"
 #endif
