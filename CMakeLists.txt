@@ -3,8 +3,8 @@
 set( srcs "ili9341.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires "esp_driver_ledc esp_driver_spi hal" )
-set( priv_requires "driver fonts hal_esp32 printfx syslog systiming")
+set( requires "main" )
+set( priv_requires "fonts")
 
 idf_component_register(
 	SRCS ${srcs}
