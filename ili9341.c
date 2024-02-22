@@ -222,19 +222,19 @@ ledc_channel_config_t ledc_channel = {
 u8_t ili9341BacklightLevel(u8_t Percent) {
 	if (Percent > 100) Percent %= 100;
 	#if (ili9341BACKLIGHT_MODE == 0)
-    u8_t U8 = Percent * 2;
-	U8 += U8 >> 2;
-    ili9341_send_combo(ili9341WRDISBV, &U8, sizeof(U8));
+    u8_t U8val = Percent * 2;
+	U8val += U8val >> 2;
+    ili9341_send_combo(ili9341WRDISBV, &U8val, sizeof(U8val));
 
 	#elif (ili9341BACKLIGHT_MODE == 1)
-	u32_t U32 = Percent * 82;
-	if (U32 > 8191) U32 = 8191;
+	u32_t U32val = Percent * 82;
+	if (U32val > 8191) U32val = 8191;
 
 		#if SOC_LEDC_SUPPORT_HS_MODE
-    	ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel, U32);
+    	ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel, U32val);
     	ledc_update_duty(LEDC_HIGH_SPEED_MODE, ledc_channel.channel);
 		#else
-    	ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel, U32);
+    	ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel, U32val);
     	ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel);
 		#endif
 	#endif
