@@ -3,8 +3,8 @@
 set( srcs "ili9341.c" )
 set( include_dirs "." )
 set( priv_include_dirs )
-set( requires "main" )
-set( priv_requires "fonts")
+set( requires "fonts hal_esp32" )
+set( priv_requires )
 
 idf_component_register(
 	SRCS ${srcs}
