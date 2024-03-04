@@ -24,30 +24,9 @@
 #define	debugPARAM					(debugFLAG_GLOBAL & debugFLAG & 0x4000)
 #define	debugRESULT					(debugFLAG_GLOBAL & debugFLAG & 0x8000)
 
-// ####################################### LCD definitions #########################################
-
-#define	ili9341GPIO_LIGHT			GPIO_NUM_5
-#define	ili9341GPIO_RESET			GPIO_NUM_18
-#define	ili9341GPIO_SCLK			GPIO_NUM_19
-#define	ili9341GPIO_D_C_X			GPIO_NUM_21
-#define ili9341GPIO_CS				GPIO_NUM_22
-#define	ili9341GPIO_MOSI			GPIO_NUM_23
-#define	ili9341GPIO_MISO			GPIO_NUM_25
-
-#define	ili9341LCD_OVERCLOCK		1
-#define ili9341LINES_PARALLEL 		16
-#define	ili9341WR_DSP_BRIGHTNESS	0x51
-#define ili9341BACKLIGHT_MODE		1			// 0=ON/OFF  1=PWM
-
 // ############################################ Macros #############################################
 
 #define ENABLE_EPID					0
-
-#define	ili9341WRDISBV				0x51
-#define	ili9341WRCTRLD				0x53
-#define	ili9341WRCTRLD_BCTRL		0x20
-#define	ili9341WRCTRLD_DD			0x08
-#define	ili9341WRCTRLD_BL			0x04
 
 // ######################################### Enumerations ##########################################
 
