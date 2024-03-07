@@ -12,6 +12,7 @@
 #endif
 #include "fonts.h"
 #include "hal_gpio.h"
+#include "ili9341.h"
 #include "x_errors_events.h"
 #include "printfx.h"
 #include "syslog.h"
@@ -27,6 +28,14 @@
 // ############################################ Macros #############################################
 
 #define ENABLE_EPID					0
+
+#if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5,0,0))
+	#define ili9341DMA_CHAN	SPI_DMA_CH2
+	#define ili9341SPI_HOST	HSPI_HOST
+#else
+	#define ili9341DMA_CHAN	SPI_DMA_CH_AUTO
+	#define ili9341SPI_HOST	SPI2_HOST
+#endif
 
 // ######################################### Enumerations ##########################################
 
@@ -65,15 +74,11 @@ void ili9341ToggleDClineCallback(spi_transaction_t *t);
 // ###################################### Private variables ########################################
 
 spi_device_interface_config_t ili9341_config = {
-	.mode			= 0,
-	#if (ili9341LCD_OVERCLOCK == 1)
-	.clock_speed_hz	= 26*1000*1000,					// 26 MHz
-	#else
-	.clock_speed_hz	= 10*1000*1000,           		// 10 MHz
-	#endif
-	.spics_io_num	= ili9341GPIO_CS,				// CS pin
-	.queue_size 	= 7,           					// queue 7 transactions at a time
-	.pre_cb			= ili9341ToggleDClineCallback,	//Specify pre-transfer callback to handle D/C line
+	.mode = 0,
+	.clock_speed_hz	= halLCD_SPI_SPEED,
+	.spics_io_num = halLCD_GPIO_CS,						// CS pin
+	.queue_size = 7,           							// queue 7 transactions at a time
+	.pre_cb = ili9341ToggleDClineCallback,				// Specify pre-transfer callback to handle D/C line
 };
 
 spi_device_handle_t ili9341handle = 0;
@@ -170,42 +175,42 @@ void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
 
 // ################################### PWM backlight support #######################################
 
-#if (buildGUI == 1) || (buildGUI == 2) || (buildGUI == 3)
+#if (buildGUI == 1) || (buildGUI == 2)
 ledc_timer_config_t ledc_timer = {
-    .duty_resolution	= LEDC_TIMER_13_BIT,
-    .freq_hz			= 5000,
+    .duty_resolution = LEDC_TIMER_13_BIT,
+    .freq_hz = 5000,
 	#if SOC_LEDC_SUPPORT_HS_MODE
-	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+	.speed_mode = LEDC_HIGH_SPEED_MODE,
 	#else
-    .speed_mode			= LEDC_LOW_SPEED_MODE,	// timer mode
+    .speed_mode = LEDC_LOW_SPEED_MODE,					// timer mode
 	#endif
-    .timer_num			= LEDC_TIMER_1,			// timer index
-    .clk_cfg			= LEDC_AUTO_CLK,		// Auto select the source clock
+    .timer_num = LEDC_TIMER_1,							// timer index
+    .clk_cfg = LEDC_AUTO_CLK,							// Auto select the source clock
 };
 
 ledc_channel_config_t ledc_channel = {
-    .channel    		= LEDC_CHANNEL_0,
-    .duty       		= 0,
+    .channel = LEDC_CHANNEL_0,
+    .duty = 0,
 	#if (buildPLTFRM == HW_DK41)
-    .gpio_num   		= ili9341GPIO_LIGHT,
+    .gpio_num = halLCD_GPIO_LIGHT,
 	#endif
 	#if SOC_LEDC_SUPPORT_HS_MODE
-	.speed_mode 		= LEDC_HIGH_SPEED_MODE,
+	.speed_mode = LEDC_HIGH_SPEED_MODE,
 	#else
-	.speed_mode 		= LEDC_LOW_SPEED_MODE,
+	.speed_mode = LEDC_LOW_SPEED_MODE,
 	#endif
-    .hpoint     		= 0,
-    .timer_sel  		= LEDC_TIMER_0,
+    .hpoint = 0,
+    .timer_sel = LEDC_TIMER_0,
 };
 
 u8_t ili9341BacklightLevel(u8_t Percent) {
 	if (Percent > 100) Percent %= 100;
-	#if (ili9341BACKLIGHT_MODE == 0)
+	#if (halLCD_BACKLIGHT_MODE == 0)
     u8_t U8val = Percent * 2;
 	U8val += U8val >> 2;
-    ili9341_send_combo(ili9341WRDISBV, &U8val, sizeof(U8val));
+    ili9341SendCombo(ili9341WRDISBV, &U8val, sizeof(U8val));
 
-	#elif (ili9341BACKLIGHT_MODE == 1)
+	#elif (halLCD_BACKLIGHT_MODE == 1)
 	u32_t U32val = Percent * 82;
 	if (U32val > 8191) U32val = 8191;
 
@@ -221,12 +226,12 @@ u8_t ili9341BacklightLevel(u8_t Percent) {
 }
 
 void ili9341BackLightStatus(bool Status) {
-    gpio_set_direction(ili9341GPIO_LIGHT, GPIO_MODE_OUTPUT);
-    gpio_set_level(ili9341GPIO_LIGHT, !Status);
+    gpio_set_direction(halLCD_GPIO_LIGHT, GPIO_MODE_OUTPUT);
+    gpio_set_level(halLCD_GPIO_LIGHT, !Status);
 }
 
 void ili9341BacklightInit(void) {
-	#if (ili9341BACKLIGHT_MODE == 1)
+	#if (halLCD_BACKLIGHT_MODE == 1)
     ledc_timer_config(&ledc_timer);
 		#if SOC_LEDC_SUPPORT_HS_MODE
 		ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
@@ -238,9 +243,9 @@ void ili9341BacklightInit(void) {
     ledc_fade_func_install(0);							// Initialize fade service.
     ledc_channel_config(&ledc_channel);
 
-	#elif (ili9341BACKLIGHT_MODE == 0)
+	#elif (halLCD_BACKLIGHT_MODE == 0)
 	u8_t u8 = ili9341WRCTRLD_BCTRL | ili9341WRCTRLD_DD | ili9341WRCTRLD_BL;
-	ili9341_send_combo(ili9341WRCTRLD, &u8, sizeof(u8_t));
+	ili9341SendCombo(ili9341WRCTRLD, &u8, sizeof(u8_t));
 	#endif
 	ili9341BacklightLevel(0);
 }
@@ -292,8 +297,8 @@ void ili9341SendMultiLines(int ypos, u16_t *linedata) {
 
 	trans[3].tx_data[0] = ypos >> 8;        			// Start page high
 	trans[3].tx_data[1] = ypos & 0xff;      			// start page low
-	trans[3].tx_data[2] = (ypos + ili9341LINES_PARALLEL) >> 8;	//end page high
-	trans[3].tx_data[3] = (ypos + ili9341LINES_PARALLEL) & 0xff;//end page low
+	trans[3].tx_data[2] = (ypos + halLCD_BUFFER_LINES) >> 8;	//end page high
+	trans[3].tx_data[3] = (ypos + halLCD_BUFFER_LINES) & 0xff;//end page low
 
 	trans[5].tx_buffer = linedata;        		// finally send the line data
 
@@ -319,13 +324,13 @@ void ili9341CheckMultiLinesSend(void) {
 //set the D/C line to the value indicated in the user field.
 void ili9341ToggleDClineCallback(spi_transaction_t *t) {
 	int dc = (int) t->user;
-	gpio_set_level(ili9341GPIO_D_C_X, dc);
+	gpio_set_level(halLCD_GPIO_D_C_X, dc);
 }
 
 int ili9341DeInitSPI(void) {
-	gpio_reset_pin(ili9341GPIO_LIGHT);
-	gpio_reset_pin(ili9341GPIO_RESET);
-	gpio_reset_pin(ili9341GPIO_D_C_X);
+	gpio_reset_pin(halLCD_GPIO_LIGHT);
+	gpio_reset_pin(halLCD_GPIO_RESET);
+	gpio_reset_pin(halLCD_GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
 	ESP_ERROR_CHECK(spi_bus_free(SPI2_HOST));
 	IF_P(debugTRACK, "DeInit ILI9341/ST7789V device\r\n");
@@ -346,7 +351,7 @@ int ili9341Config(int DevType) {
 		if (lcd_init_cmds[cmd].databytes & 0x80) vTaskDelay(pdMS_TO_TICKS(100));
 		++cmd;
 	}
-	gpio_set_level(ili9341GPIO_LIGHT, 0);				// Enable backlight
+	gpio_set_level(halLCD_GPIO_LIGHT, 0);				// Enable backlight
 	#if	(ENABLE_EPID)
 	sILI9341.epid.val = EP_DEF0(devILI9341, subDSP320X240, URI_UNKNOWN, UNIT_PIXEL,0);
 	#endif
@@ -357,30 +362,25 @@ int ili9341Config(int DevType) {
 
 int ili9341InitSPI(void) {
 	const spi_bus_config_t buscfg = {
-		.mosi_io_num	= ili9341GPIO_MOSI,
-		.miso_io_num	= ili9341GPIO_MISO,
-		.sclk_io_num	= ili9341GPIO_SCLK,
+		.mosi_io_num	= halLCD_GPIO_MOSI,
+		.miso_io_num	= halLCD_GPIO_MISO,
+		.sclk_io_num	= halLCD_GPIO_SCLK,
 		.quadwp_io_num	= -1,
 		.quadhd_io_num	= -1,
-		.max_transfer_sz = ili9341LINES_PARALLEL * 320 * 2+8,
+		.max_transfer_sz = halLCD_BUFFER_LINES * halLCD_MAX_PX * 16,
 		.flags = 0
 	};
-	#if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5,0,0))
-	ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH2));
-	ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &ili9341_config, &ili9341handle));	//Attach the LCD to the SPI bus
-	#else
-	ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
-	ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &ili9341_config, &ili9341handle));	//Attach the LCD to the SPI bus
-	#endif
+	ESP_ERROR_CHECK(spi_bus_initialize(ili9341SPI_HOST, &buscfg, ili9341DMA_CHAN));
+	ESP_ERROR_CHECK(spi_bus_add_device(ili9341SPI_HOST, &ili9341_config, &ili9341handle));	//Attach the LCD to the SPI bus
 	//Initialize non-SPI GPIOs
-	gpio_set_direction(ili9341GPIO_D_C_X, GPIO_MODE_OUTPUT);
-	gpio_set_direction(ili9341GPIO_RESET, GPIO_MODE_OUTPUT);
-	gpio_set_direction(ili9341GPIO_LIGHT, GPIO_MODE_OUTPUT);
+	gpio_set_direction(halLCD_GPIO_D_C_X, GPIO_MODE_OUTPUT);
+	gpio_set_direction(halLCD_GPIO_RESET, GPIO_MODE_OUTPUT);
+	gpio_set_direction(halLCD_GPIO_LIGHT, GPIO_MODE_OUTPUT);
 
 	//Reset the display
-	gpio_set_level(ili9341GPIO_RESET, 0);
+	gpio_set_level(halLCD_GPIO_RESET, 0);
 	vTaskDelay(pdMS_TO_TICKS(100));
-	gpio_set_level(ili9341GPIO_RESET, 1);
+	gpio_set_level(halLCD_GPIO_RESET, 1);
 	vTaskDelay(pdMS_TO_TICKS(100));
 	IF_SYSTIMER_INIT(debugTIMING, stILI9341a, stMICROS, "ili9341A", 1, 1000);
 	IF_SYSTIMER_INIT(debugTIMING, stILI9341b, stMICROS, "ili9341B", 1, 1000);
@@ -438,9 +438,9 @@ void ili9341_set_brightness(u8_t level) { }
 
 void ili9341TestInit(void) {
 	for (int i = 0; i < 2; ++i) {		// Allocate memory for the pixel buffers
-		LinesBuf[i] = heap_caps_malloc(320 * ili9341LINES_PARALLEL * sizeof(u16_t), MALLOC_CAP_DMA);
+		LinesBuf[i] = heap_caps_malloc(halLCD_MAX_PX * halLCD_BUFFER_LINES * sizeof(u16_t), MALLOC_CAP_DMA);
 		assert(LinesBuf[i] != NULL);
-		IF_P(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * ili9341LINES_PARALLEL * sizeof(u16_t));
+		IF_P(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * halLCD_BUFFER_LINES * sizeof(u16_t));
 	}
 	for (int x = 0; x < ili9341NUM_TRANS; ++x) {
 		if ((x & 1) == 0) {            					// Even transfers are commands
@@ -455,33 +455,31 @@ void ili9341TestInit(void) {
 
 	trans[1].tx_data[0] = 0;              				// Start Col High
 	trans[1].tx_data[1] = 0;              				// Start Col Low
-	trans[1].tx_data[2] = (320) >> 8;       			// End Col High
-	trans[1].tx_data[3] = (320) & 0xff;     			// End Col Low
+	trans[1].tx_data[2] = (halLCD_MAX_PX) >> 8;       	// End Col High
+	trans[1].tx_data[3] = (halLCD_MAX_PX) & 0xff;     	// End Col Low
 
 	trans[2].tx_data[0] = SET_PAG_AD;    				// Page address set
 	trans[4].tx_data[0] = WR_MEM;       				// memory write
-	trans[5].length = 320 * 2 * BITS_IN_BYTE * ili9341LINES_PARALLEL; // Data length, in bits
+	trans[5].length = halLCD_MAX_PX * 2 * BITS_IN_BYTE * halLCD_BUFFER_LINES; // Data length, in bits
 	trans[5].flags = 0;									// undo SPI_TRANS_USE_TXDATA flag
 	// ensure ili9341TestUpdate() start correctly
 	SentBuf = -1;
 }
 
 void ili9341TestFillBuffer(u16_t *dest, int line) {
-	for (int y = line; y < (line + ili9341LINES_PARALLEL); ++y)
-		for (int x = 0; x < 320; ++x)
-			*dest++ = CurCol;
+	for (int y = line; y < (line + halLCD_BUFFER_LINES); ++y) {
+		for (int x = 0; x < halLCD_MAX_PX; ++x) *dest++ = CurCol;
+	}
 }
 
 void ili9341TestUpdate(void) {
 	CurCol += 0x0821;
-	for (int y = 0; y < 240; y += ili9341LINES_PARALLEL) {
+	for (int y = 0; y < halLCD_MAX_PY; y += halLCD_BUFFER_LINES) {
 		ili9341TestFillBuffer(LinesBuf[CalcBuf], y);
-		if (SentBuf != -1)
-			ili9341CheckMultiLinesSend();				// Finish sending previous lines
+		if (SentBuf != -1) ili9341CheckMultiLinesSend();	// Finish sending previous lines
 		IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341a);
 		ili9341SendMultiLines(y, LinesBuf[CalcBuf]);	// Send the line buffer we just calculated.
 		IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341a);
-
 		SentBuf = CalcBuf;								// save buffer just calc(+sent) as sent
 		CalcBuf = CalcBuf? 0 : 1;						// toggle index to select next buffer to calc
 	}
@@ -491,10 +489,9 @@ void ili9341TestUpdate(void) {
 
 void ili9341Test(void) {
 	ili9341TestInit();
-	for (int i = 0; i < 50; ++i) {
+	for (int i = 0; i < halLCD_BUFFER_LINES; ++i) {
 		ili9341TestUpdate();
 		vTaskDelay(500);
 	}
 }
-
 #endif
