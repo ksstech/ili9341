@@ -1,6 +1,6 @@
 // ili9341.c - Copyright (c) 2014-24 Andre M. Maree / KSS Technologies (Pty) Ltd.
 
-#include "hal_config.h"
+#include "hal_platform.h"
 
 #if (HAL_ILI9341 > 0)
 #include "esp_err.h"
