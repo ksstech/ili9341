@@ -476,7 +476,8 @@ void ili9341TestUpdate(void) {
 	CurCol += 0x0821;
 	for (int y = 0; y < halLCD_MAX_PY; y += halLCD_BUFFER_LINES) {
 		ili9341TestFillBuffer(LinesBuf[CalcBuf], y);
-		if (SentBuf != -1) ili9341CheckMultiLinesSend();	// Finish sending previous lines
+		if (SentBuf != -1)
+			ili9341CheckMultiLinesSend();	// Finish sending previous lines
 		IF_EXEC_1(debugTIMING, xSysTimerStart, stILI9341a);
 		ili9341SendMultiLines(y, LinesBuf[CalcBuf]);	// Send the line buffer we just calculated.
 		IF_EXEC_1(debugTIMING, xSysTimerStop, stILI9341a);
