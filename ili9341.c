@@ -333,7 +333,7 @@ int ili9341DeInitSPI(void) {
 	gpio_reset_pin(halLCD_GPIO_D_C_X);
 	ESP_ERROR_CHECK(spi_bus_remove_device(ili9341handle));
 	ESP_ERROR_CHECK(spi_bus_free(SPI2_HOST));
-	IF_P(debugTRACK, "DeInit ILI9341/ST7789V device\r\n");
+	IF_PX(debugTRACK, "DeInit ILI9341/ST7789V device\r\n");
 	return erSUCCESS;
 }
 
@@ -342,7 +342,7 @@ int ili9341Config(int DevType) {
 	if (DevType == halLCD_ILI9341) lcd_init_cmds = ili_init_cmds;
 	else if (DevType == halLCD_ST7798V) lcd_init_cmds = st_init_cmds;
 	else return erFAILURE;
-	IF_P(debugTRACK, "Configured device type '%s'\r\n", DevType ? "ST7789V" : "ILI9341" );
+	IF_PX(debugTRACK, "Configured device type '%s'\r\n", DevType ? "ST7789V" : "ILI9341" );
 
 	int cmd = 0;
 	while (lcd_init_cmds[cmd].databytes != 0xff) {		// Send all the commands
@@ -387,11 +387,11 @@ int ili9341InitSPI(void) {
 
 	int iRV = ili9341GetID();
 	if (iRV == erFAILURE) goto exit;
-	IF_P(debugTRACK, "Found %d=%s ", iRV, iRV == halLCD_ILI9341 ? "ILI9341" : "ST7789V");
+	IF_PX(debugTRACK, "Found %d=%s ", iRV, iRV == halLCD_ILI9341 ? "ILI9341" : "ST7789V");
 	iRV = ili9341Config(iRV);
 	if (iRV == erSUCCESS) return iRV;
 exit:
-	IF_P(debugTRACK, "Error %d, failed to find/init ILI9341/ST7789V", iRV);
+	IF_PX(debugTRACK, "Error %d, failed to find/init ILI9341/ST7789V", iRV);
 	return erFAILURE;
 }
 
@@ -440,7 +440,7 @@ void ili9341TestInit(void) {
 	for (int i = 0; i < 2; ++i) {		// Allocate memory for the pixel buffers
 		LinesBuf[i] = heap_caps_malloc(halLCD_MAX_PX * halLCD_BUFFER_LINES * sizeof(u16_t), MALLOC_CAP_DMA);
 		assert(LinesBuf[i] != NULL);
-		IF_P(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * halLCD_BUFFER_LINES * sizeof(u16_t));
+		IF_PX(debugTRACK, "Allocating Buf #%d = %d bytes", i, 320 * halLCD_BUFFER_LINES * sizeof(u16_t));
 	}
 	for (int x = 0; x < ili9341NUM_TRANS; ++x) {
 		if ((x & 1) == 0) {            					// Even transfers are commands
@@ -483,7 +483,7 @@ void ili9341TestUpdate(void) {
 		SentBuf = CalcBuf;								// save buffer just calc(+sent) as sent
 		CalcBuf = CalcBuf? 0 : 1;						// toggle index to select next buffer to calc
 	}
-	IF_P(debugTRACK, "Frame=%d\r", CurFrame);
+	IF_PX(debugTRACK, "Frame=%d\r", CurFrame);
 	++CurFrame;
 }
 
