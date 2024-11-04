@@ -13,7 +13,7 @@
 #include "fonts.h"
 #include "hal_gpio.h"
 #include "ili9341.h"
-#include "x_errors_events.h"
+#include "errors_events.h"
 #include "printfx.h"
 #include "syslog.h"
 #include "systiming.h"
