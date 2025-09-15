@@ -179,11 +179,11 @@ void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
 ledc_timer_config_t ledc_timer = {
     .duty_resolution = LEDC_TIMER_13_BIT,
     .freq_hz = 5000,
-	#if SOC_LEDC_SUPPORT_HS_MODE
+#if SOC_LEDC_SUPPORT_HS_MODE
 	.speed_mode = LEDC_HIGH_SPEED_MODE,
-	#else
+#else
     .speed_mode = LEDC_LOW_SPEED_MODE,					// timer mode
-	#endif
+#endif
     .timer_num = LEDC_TIMER_1,							// timer index
     .clk_cfg = LEDC_AUTO_CLK,							// Auto select the source clock
 };
@@ -193,24 +193,24 @@ ledc_channel_config_t ledc_channel = {
     .duty = 0,
 #if (cmakePLTFRM == HW_DK41)
     .gpio_num = halLCD_GPIO_LIGHT,
-	#endif
-	#if SOC_LEDC_SUPPORT_HS_MODE
+#endif
+#if SOC_LEDC_SUPPORT_HS_MODE
 	.speed_mode = LEDC_HIGH_SPEED_MODE,
-	#else
+#else
 	.speed_mode = LEDC_LOW_SPEED_MODE,
-	#endif
+#endif
     .hpoint = 0,
     .timer_sel = LEDC_TIMER_0,
 };
 
 u8_t ili9341BacklightLevel(u8_t Percent) {
 	if (Percent > 100) Percent %= 100;
-	#if (halLCD_BACKLIGHT_MODE == 0)
+#if (halLCD_BACKLIGHT_MODE == 0)
     u8_t U8val = Percent * 2;
 	U8val += U8val >> 2;
     ili9341SendCombo(ili9341WRDISBV, &U8val, sizeof(U8val));
 
-	#elif (halLCD_BACKLIGHT_MODE == 1)
+#elif (halLCD_BACKLIGHT_MODE == 1)
 	u32_t U32val = Percent * 82;
 	if (U32val > 8191) U32val = 8191;
 
@@ -221,7 +221,7 @@ u8_t ili9341BacklightLevel(u8_t Percent) {
     	ledc_set_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel, U32val);
     	ledc_update_duty(LEDC_LOW_SPEED_MODE, ledc_channel.channel);
 		#endif
-	#endif
+#endif
 	return Percent;
 }
 
