@@ -175,7 +175,7 @@ void ili9341SendCombo(const u8_t cmd, const u8_t * data, int len) {
 
 // ################################### PWM backlight support #######################################
 
-#if (appGUI == 1) || (appGUI == 2)
+#if (cmakeGUI == 1) || (cmakeGUI == 2)
 ledc_timer_config_t ledc_timer = {
     .duty_resolution = LEDC_TIMER_13_BIT,
     .freq_hz = 5000,
@@ -191,7 +191,7 @@ ledc_timer_config_t ledc_timer = {
 ledc_channel_config_t ledc_channel = {
     .channel = LEDC_CHANNEL_0,
     .duty = 0,
-	#if (appPLTFRM == HW_DK41)
+#if (cmakePLTFRM == HW_DK41)
     .gpio_num = halLCD_GPIO_LIGHT,
 	#endif
 	#if SOC_LEDC_SUPPORT_HS_MODE
